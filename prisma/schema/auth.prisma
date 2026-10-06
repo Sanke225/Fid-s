@@ -1,0 +1,83 @@
+// Comptes et connexion — tables attendues par Better Auth (user, session, account, verification).
+// Ne pas renommer les champs : Better Auth les lit par leur nom Prisma.
+
+enum UserRole {
+  dev
+  client
+  admin
+
+  @@map("user_role")
+}
+
+model User {
+  id            String    @id @default(uuid())
+  name          String
+  email         String    @unique
+  emailVerified Boolean   @default(false) @map("email_verified")
+  image         String?
+  // Choisi à l'inscription (dev ou client) ; nul tant qu'un compte Google n'a pas choisi. admin : par script uniquement.
+  role          UserRole?
+  phone         String?
+  businessName  String?   @map("business_name")
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  sessions         Session[]
+  accounts         Account[]
+  projects         Project[]
+  payoutMethods    PayoutMethod[]
+  clientDeliveries Delivery[]     @relation("DeliveryClient")
+  ticketsOpened    Ticket[]       @relation("TicketOpenedBy")
+  ticketsResolved  Ticket[]       @relation("TicketResolvedBy")
+  paymentsDecided  Payment[]      @relation("PaymentDecidedBy")
+
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  expiresAt DateTime @map("expires_at") @db.Timestamptz
+  token     String   @unique
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+// Une ligne par moyen de connexion : "credential" (e-mail + mot de passe haché) ou "google".
+model Account {
+  id                    String    @id @default(uuid())
+  accountId             String    @map("account_id")
+  providerId            String    @map("provider_id")
+  userId                String    @map("user_id")
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?   @map("access_token")
+  refreshToken          String?   @map("refresh_token")
+  idToken               String?   @map("id_token")
+  accessTokenExpiresAt  DateTime? @map("access_token_expires_at") @db.Timestamptz
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at") @db.Timestamptz
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@index([userId])
+  @@map("accounts")
+}
+
+model Verification {
+  id         String   @id @default(uuid())
+  identifier String
+  value      String
+  expiresAt  DateTime @map("expires_at") @db.Timestamptz
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@index([identifier])
+  @@map("verifications")
+}

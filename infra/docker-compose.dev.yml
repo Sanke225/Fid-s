@@ -1,0 +1,33 @@
+# Services de développement : docker compose -f infra/docker-compose.dev.yml up -d
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: recette
+      POSTGRES_PASSWORD: recette
+      POSTGRES_DB: recette
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+  # Instance distincte pour les bases des espaces (démos et espaces clients) : mesure d'isolation.
+  tenant-db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: recette_admin
+      POSTGRES_PASSWORD: recette_admin
+    ports:
+      - "5433:5432"
+    volumes:
+      - tenant-db-data:/var/lib/postgresql/data
+
+  mailpit:
+    image: axllent/mailpit
+    ports:
+      - "1025:1025" # SMTP
+      - "8025:8025" # interface web
+
+volumes:
+  db-data:
+  tenant-db-data:

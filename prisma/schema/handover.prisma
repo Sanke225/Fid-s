@@ -1,0 +1,79 @@
+// Passation, facture et sauvegardes (bloc 5).
+
+enum HandoverStatus {
+  running
+  succeeded
+  failed
+
+  @@map("handover_status")
+}
+
+enum BackupKind {
+  initial
+  nightly
+  manual
+
+  @@map("backup_kind")
+}
+
+enum BackupStatus {
+  running
+  succeeded
+  failed
+
+  @@map("backup_status")
+}
+
+model Handover {
+  id                     String         @id @default(uuid())
+  deliveryId             String         @unique @map("delivery_id")
+  delivery               Delivery       @relation(fields: [deliveryId], references: [id], onDelete: Restrict)
+  paymentId              String         @unique @map("payment_id")
+  payment                Payment        @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+  status                 HandoverStatus @default(running)
+  currentStep            String?        @map("current_step")
+  attempts               Int            @default(0)
+  lastError              String?        @map("last_error")
+  adminPasswordEncrypted Bytes?         @map("admin_password_encrypted")
+  startedAt              DateTime       @default(now()) @map("started_at") @db.Timestamptz
+  finishedAt             DateTime?      @map("finished_at") @db.Timestamptz
+
+  @@map("handovers")
+}
+
+model Invoice {
+  id         String   @id @default(uuid())
+  deliveryId String   @unique @map("delivery_id")
+  delivery   Delivery @relation(fields: [deliveryId], references: [id], onDelete: Restrict)
+  paymentId  String   @unique @map("payment_id")
+  payment    Payment  @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+  // Séquentiel sans trou : RCT-2026-000001
+  number     String   @unique
+  amountXof  Int      @map("amount_xof")
+  // Instantanés du vendeur (dev) et de l'acheteur (client) au moment de l'émission.
+  seller     Json
+  buyer      Json
+  pdfPath    String   @map("pdf_path")
+  issuedAt   DateTime @default(now()) @map("issued_at") @db.Timestamptz
+
+  @@map("invoices")
+}
+
+model Backup {
+  id              String       @id @default(uuid())
+  // Nul pour la sauvegarde de la base de la plateforme.
+  spaceId         String?      @map("space_id")
+  space           Space?       @relation(fields: [spaceId], references: [id], onDelete: Restrict)
+  kind            BackupKind
+  status          BackupStatus @default(running)
+  storagePath     String?      @map("storage_path")
+  remotePath      String?      @map("remote_path")
+  sizeBytes       BigInt?      @map("size_bytes")
+  sha256          String?
+  startedAt       DateTime     @default(now()) @map("started_at") @db.Timestamptz
+  finishedAt      DateTime?    @map("finished_at") @db.Timestamptz
+  restoreTestedAt DateTime?    @map("restore_tested_at") @db.Timestamptz
+
+  @@index([spaceId])
+  @@map("backups")
+}

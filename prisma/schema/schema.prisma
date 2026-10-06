@@ -1,0 +1,11 @@
+// Point d'entrée du schéma. Les modèles vivent dans les autres fichiers .prisma de ce dossier
+// (comptes, livraisons, paiements…). Tables en snake_case pluriel via @@map, champs en camelCase.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}

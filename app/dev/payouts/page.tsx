@@ -26,7 +26,7 @@ export default function DevPayoutsPage() {
         <span style={{ fontSize: '13px', fontWeight: 600, letterSpacing: '.05em', textTransform: 'uppercase', color: 'var(--muted)' }}>
           Finances & Réception
         </span>
-        <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 400, fontSize: '32px', margin: '4px 0 0' }}>
+        <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 400, fontSize: 'clamp(24px, 3.5vw, 32px)', margin: '4px 0 0' }}>
           Comptes d'encaissement Mobile Money
         </h1>
       </div>
@@ -38,7 +38,7 @@ export default function DevPayoutsPage() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '20px' }}>
         {/* Compte Wave */}
         <div style={{ padding: '24px', borderRadius: '28px', background: 'var(--card)', boxShadow: 'var(--shadow-soft)', border: '1px solid var(--color-divider)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

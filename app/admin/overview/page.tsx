@@ -1,14 +1,12 @@
 'use client';
 
 import React from 'react';
-import { useRouter } from 'next/navigation';
 import { useRecette } from '@/lib/context';
 import { useToast } from '@/components/Toast';
 import { CheckIcon, OrangeMoneyIcon, RefreshIcon, WaveIcon } from '@/components/Icons';
 
 export default function AdminOverviewPage() {
-  const router = useRouter();
-  const { state, updateProjectStatus, switchRole } = useRecette();
+  const { state, updateProjectStatus } = useRecette();
   const { showToast } = useToast();
 
   const telem = state.serverTelemetry;
@@ -35,28 +33,14 @@ export default function AdminOverviewPage() {
             </span>
             <span style={{ fontSize: '13px', color: 'var(--muted)' }}>Serveur Unique de Production (Abidjan)</span>
           </div>
-          <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 400, fontSize: 'clamp(28px, 3vw, 38px)', margin: '6px 0 0' }}>
+          <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 400, fontSize: 'clamp(26px, 3vw, 38px)', margin: '6px 0 0' }}>
             Télémétrie & Back-office
           </h1>
-        </div>
-
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button
-            onClick={() => {
-              switchRole('dev');
-              showToast('Passé en vue Développeur', 'success');
-              router.push('/dev/dashboard');
-            }}
-            className="btn btn-secondary"
-            style={{ padding: '10px 18px', borderRadius: '999px', fontSize: '13px' }}
-          >
-            Passer en vue Développeur
-          </button>
         </div>
       </div>
 
       {/* 4 JAUGES CIRCULAIRES EN TEMPS RÉEL */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '16px' }}>
         {/* Jauge CPU */}
         <div style={{ padding: '22px', borderRadius: '26px', background: 'var(--card)', boxShadow: 'var(--shadow-soft)', border: '1px solid var(--color-divider)', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '12px' }}>
           <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--muted)' }}>Charge Processeur (CPU)</span>

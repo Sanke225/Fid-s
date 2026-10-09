@@ -97,7 +97,7 @@ export default function LandingPage() {
           }}
         />
 
-        <div style={{ position: 'relative', zIndex: 1, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 360px), 1fr))', gap: 'clamp(48px, 6vw, 84px)', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ position: 'relative', zIndex: 1, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', gap: 'clamp(36px, 5vw, 72px)', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '28px', maxWidth: '580px', width: '100%', margin: '0 auto', padding: '0 clamp(4px, 1.5vw, 12px)' }}>
             <div
               style={{
@@ -183,65 +183,65 @@ export default function LandingPage() {
           </div>
 
           {/* MOCKUP TÉLÉPHONE 3D FLOTTANT */}
-          <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', padding: 'clamp(20px, 3vw, 40px) 16px', perspective: '1000px' }}>
+          <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', padding: 'clamp(20px, 3vw, 40px) 12px', perspective: '1000px' }}>
             {/* Carte flottante Confiance */}
             <div
+              className="hidden sm:flex"
               style={{
                 position: 'absolute',
                 top: '16px',
-                left: '-16px',
+                left: 'clamp(0px, 2vw, 16px)',
                 zIndex: 3,
-                padding: '12px 18px',
+                padding: '10px 16px',
                 borderRadius: '20px',
                 background: 'var(--glass-strong)',
                 backdropFilter: 'blur(20px)',
                 WebkitBackdropFilter: 'blur(20px)',
                 border: '1px solid var(--glass-border)',
                 boxShadow: 'var(--shadow-float)',
-                display: 'flex',
                 alignItems: 'center',
                 gap: '10px',
                 animation: 'float 6s ease-in-out infinite'
               }}
             >
-              <WaveIcon size={24} />
+              <WaveIcon size={22} />
               <div>
-                <strong style={{ fontSize: '13px', display: 'block' }}>Plateforme de confiance</strong>
-                <span style={{ fontSize: '11px', color: 'var(--muted)' }}>Garantie de livraison</span>
+                <strong style={{ fontSize: '12px', display: 'block' }}>Plateforme de confiance</strong>
+                <span style={{ fontSize: '10.5px', color: 'var(--muted)' }}>Garantie de livraison</span>
               </div>
             </div>
 
             {/* Carte flottante Orange Money */}
             <div
+              className="hidden sm:flex"
               style={{
                 position: 'absolute',
                 bottom: '44px',
-                right: '-16px',
+                right: 'clamp(0px, 2vw, 16px)',
                 zIndex: 3,
-                padding: '12px 18px',
+                padding: '10px 16px',
                 borderRadius: '20px',
                 background: 'var(--glass-strong)',
                 backdropFilter: 'blur(20px)',
                 WebkitBackdropFilter: 'blur(20px)',
                 border: '1px solid var(--glass-border)',
                 boxShadow: 'var(--shadow-float)',
-                display: 'flex',
                 alignItems: 'center',
                 gap: '10px',
                 animation: 'float 7s ease-in-out infinite reverse'
               }}
             >
-              <OrangeMoneyIcon size={24} />
+              <OrangeMoneyIcon size={22} />
               <div>
-                <strong style={{ fontSize: '13px', display: 'block' }}>Déblocage instantané</strong>
-                <span style={{ fontSize: '11px', color: 'var(--success)', fontWeight: 600 }}>Accès débloqué ✓</span>
+                <strong style={{ fontSize: '12px', display: 'block' }}>Déblocage instantané</strong>
+                <span style={{ fontSize: '10.5px', color: 'var(--success)', fontWeight: 600 }}>Accès débloqué ✓</span>
               </div>
             </div>
 
             {/* Cadre de l'appareil mobile */}
             <div
               style={{
-                width: '320px',
+                width: 'min(320px, calc(100vw - 32px))',
                 maxWidth: '100%',
                 borderRadius: '46px',
                 background: 'var(--device)',
@@ -342,44 +342,44 @@ export default function LandingPage() {
       </section>
 
       {/* BANDEAU DE CONFIANCE & CHIFFRES CLÉS */}
-      <section style={{ background: 'var(--color-surface)', borderTop: '1px solid var(--color-divider)', borderBottom: '1px solid var(--color-divider)', padding: '32px 20px' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '24px', textAlign: 'center' }}>
+      <section style={{ background: 'var(--color-surface)', borderTop: '1px solid var(--color-divider)', borderBottom: '1px solid var(--color-divider)', padding: 'clamp(24px, 4vw, 36px) 16px' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 140px), 1fr))', gap: '20px', textAlign: 'center' }}>
           <div>
-            <strong style={{ fontFamily: 'var(--font-heading)', fontSize: 'clamp(30px, 3.2vw, 40px)', color: 'var(--color-accent)' }}>1 248</strong>
-            <span style={{ display: 'block', fontSize: '14px', color: 'var(--muted)', marginTop: '4px' }}>projets livrés avec succès</span>
+            <strong style={{ fontFamily: 'var(--font-heading)', fontSize: 'clamp(28px, 3.2vw, 40px)', color: 'var(--color-accent)' }}>1 248</strong>
+            <span style={{ display: 'block', fontSize: '13px', color: 'var(--muted)', marginTop: '4px' }}>projets livrés avec succès</span>
           </div>
           <div>
-            <strong style={{ fontFamily: 'var(--font-heading)', fontSize: 'clamp(30px, 3.2vw, 40px)', color: 'var(--color-text)' }}>312</strong>
-            <span style={{ display: 'block', fontSize: '14px', color: 'var(--muted)', marginTop: '4px' }}>démos actives en ce moment</span>
+            <strong style={{ fontFamily: 'var(--font-heading)', fontSize: 'clamp(28px, 3.2vw, 40px)', color: 'var(--color-text)' }}>312</strong>
+            <span style={{ display: 'block', fontSize: '13px', color: 'var(--muted)', marginTop: '4px' }}>démos actives en ce moment</span>
           </div>
           <div>
-            <strong style={{ fontFamily: 'var(--font-heading)', fontSize: 'clamp(30px, 3.2vw, 40px)', color: 'var(--color-accent)' }}>486,7 M</strong>
-            <span style={{ display: 'block', fontSize: '14px', color: 'var(--muted)', marginTop: '4px' }}>FCFA sécurisés sans litige</span>
+            <strong style={{ fontFamily: 'var(--font-heading)', fontSize: 'clamp(28px, 3.2vw, 40px)', color: 'var(--color-accent)' }}>486,7 M</strong>
+            <span style={{ display: 'block', fontSize: '13px', color: 'var(--muted)', marginTop: '4px' }}>FCFA sécurisés sans litige</span>
           </div>
           <div>
-            <strong style={{ fontFamily: 'var(--font-heading)', fontSize: 'clamp(30px, 3.2vw, 40px)', color: 'var(--color-text)' }}>&lt; 60 s</strong>
-            <span style={{ display: 'block', fontSize: '14px', color: 'var(--muted)', marginTop: '4px' }}>délai moyen de passation</span>
+            <strong style={{ fontFamily: 'var(--font-heading)', fontSize: 'clamp(28px, 3.2vw, 40px)', color: 'var(--color-text)' }}>&lt; 60 s</strong>
+            <span style={{ display: 'block', fontSize: '13px', color: 'var(--muted)', marginTop: '4px' }}>délai moyen de passation</span>
           </div>
         </div>
       </section>
 
       {/* LE PROBLÈME EN MIROIR */}
-      <section style={{ padding: '80px 20px', maxWidth: '1100px', margin: '0 auto' }}>
-        <div style={{ textAlign: 'center', marginBottom: '48px' }}>
+      <section style={{ padding: 'clamp(48px, 6vw, 80px) 16px', maxWidth: '1100px', margin: '0 auto' }}>
+        <div style={{ textAlign: 'center', marginBottom: 'clamp(32px, 5vw, 48px)' }}>
           <span style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--color-accent)' }}>
             Le problème universel
           </span>
-          <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 400, fontSize: 'clamp(30px, 4vw, 48px)', margin: '8px 0' }}>
+          <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 400, fontSize: 'clamp(28px, 4vw, 48px)', margin: '8px 0' }}>
             L'impasse de la fin de mission
           </h2>
-          <p style={{ fontSize: '17px', color: 'var(--muted)', maxWidth: '600px', margin: '0 auto' }}>
+          <p style={{ fontSize: 'clamp(15px, 1.8vw, 17px)', color: 'var(--muted)', maxWidth: '600px', margin: '0 auto' }}>
             Celui qui fait confiance en premier est celui qui perd : le développeur ne touche jamais son solde, ou le client paie et ne reçoit jamais son application.
           </p>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '20px' }}>
           {/* Côté Développeur */}
-          <div style={{ padding: '32px', borderRadius: '28px', background: 'var(--card)', boxShadow: 'var(--shadow-soft)', border: '1px solid var(--color-divider)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ padding: 'clamp(20px, 3.5vw, 32px)', borderRadius: '28px', background: 'var(--card)', boxShadow: 'var(--shadow-soft)', border: '1px solid var(--color-divider)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <span style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--color-accent-100)', color: 'var(--color-accent-800)', display: 'grid', placeItems: 'center', fontWeight: 700 }}>
                 DEV
@@ -398,7 +398,7 @@ export default function LandingPage() {
           </div>
 
           {/* Côté Client */}
-          <div style={{ padding: '32px', borderRadius: '28px', background: 'var(--card)', boxShadow: 'var(--shadow-soft)', border: '1px solid var(--color-divider)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ padding: 'clamp(20px, 3.5vw, 32px)', borderRadius: '28px', background: 'var(--card)', boxShadow: 'var(--shadow-soft)', border: '1px solid var(--color-divider)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <span style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--color-neutral-300)', color: 'var(--color-text)', display: 'grid', placeItems: 'center', fontWeight: 700 }}>
                 CLI
@@ -418,29 +418,29 @@ export default function LandingPage() {
         </div>
 
         {/* La Solution Recette */}
-        <div style={{ marginTop: '40px', padding: '32px', borderRadius: '28px', background: 'var(--grad-soft)', border: '1px solid var(--color-accent-200)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+        <div style={{ marginTop: 'clamp(24px, 4vw, 40px)', padding: 'clamp(20px, 3.5vw, 32px)', borderRadius: '28px', background: 'var(--grad-soft)', border: '1px solid var(--color-accent-200)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
           <span style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--color-accent-800)' }}>
             La promesse de Recette
           </span>
-          <strong style={{ fontSize: '20px', maxWidth: '720px', lineHeight: 1.4 }}>
+          <strong style={{ fontSize: 'clamp(17px, 2.2vw, 20px)', maxWidth: '720px', lineHeight: 1.4 }}>
             « Nous ne gardons jamais l’argent : l’argent va directement sur le compte Mobile Money du développeur. Ce que nous gardons jusqu’au paiement, c’est l’application. »
           </strong>
         </div>
       </section>
 
       {/* COMMENT ÇA MARCHE (5 ÉTAPES) */}
-      <section id="fonctionnement" style={{ padding: '60px 20px', background: 'var(--color-surface)', borderTop: '1px solid var(--color-divider)', borderBottom: '1px solid var(--color-divider)' }}>
+      <section id="fonctionnement" style={{ padding: 'clamp(48px, 6vw, 60px) 16px', background: 'var(--color-surface)', borderTop: '1px solid var(--color-divider)', borderBottom: '1px solid var(--color-divider)' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: '48px' }}>
+          <div style={{ textAlign: 'center', marginBottom: 'clamp(32px, 5vw, 48px)' }}>
             <span style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--color-accent)' }}>
               Processus infaillible
             </span>
-            <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 400, fontSize: 'clamp(30px, 4vw, 44px)', margin: '8px 0' }}>
+            <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 400, fontSize: 'clamp(28px, 4vw, 44px)', margin: '8px 0' }}>
               Comment ça marche en 5 temps
             </h2>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: '16px' }}>
             <div style={{ padding: '22px', borderRadius: '24px', background: 'var(--card)', boxShadow: 'var(--shadow-soft)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <span style={{ width: '34px', height: '34px', borderRadius: '50%', background: 'var(--color-accent-100)', color: 'var(--color-accent-800)', display: 'grid', placeItems: 'center', fontWeight: 700, fontSize: '14px' }}>
                 1
@@ -508,7 +508,7 @@ export default function LandingPage() {
           </p>
         </div>
 
-        <div style={{ padding: 'clamp(24px, 4vw, 44px)', borderRadius: '32px', background: 'var(--card)', boxShadow: 'var(--shadow-float)', border: '1px solid var(--color-divider)', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '36px', alignItems: 'center' }}>
+        <div style={{ padding: 'clamp(20px, 4vw, 44px)', borderRadius: '32px', background: 'var(--card)', boxShadow: 'var(--shadow-float)', border: '1px solid var(--color-divider)', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: 'clamp(24px, 4vw, 36px)', alignItems: 'center' }}>
           {/* Étape démo interactive */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -565,7 +565,7 @@ export default function LandingPage() {
           {/* Box de rendu de la démo */}
           <div
             style={{
-              padding: '28px',
+              padding: 'clamp(20px, 3.5vw, 28px)',
               borderRadius: '26px',
               background: 'var(--color-surface)',
               border: '1px solid var(--color-divider)',
@@ -630,18 +630,18 @@ export default function LandingPage() {
       </section>
 
       {/* SÉCURITÉ & TECHNOLOGIES */}
-      <section id="securite" style={{ padding: '60px 20px', background: 'var(--color-surface)', borderTop: '1px solid var(--color-divider)', borderBottom: '1px solid var(--color-divider)' }}>
+      <section id="securite" style={{ padding: 'clamp(48px, 6vw, 60px) 16px', background: 'var(--color-surface)', borderTop: '1px solid var(--color-divider)', borderBottom: '1px solid var(--color-divider)' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '40px' }}>
             <span style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--color-accent)' }}>
               Architecture durcie
             </span>
-            <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 400, fontSize: 'clamp(30px, 4vw, 44px)', margin: '8px 0' }}>
+            <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 400, fontSize: 'clamp(28px, 4vw, 44px)', margin: '8px 0' }}>
               Sécurité et technologies certifiées
             </h2>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '20px' }}>
             <div style={{ padding: '24px', borderRadius: '24px', background: 'var(--card)', boxShadow: 'var(--shadow-soft)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'var(--color-accent-100)', color: 'var(--color-accent-800)', display: 'grid', placeItems: 'center' }}>
                 <ShieldIcon size={22} />
@@ -676,20 +676,20 @@ export default function LandingPage() {
       </section>
 
       {/* TARIFS & CALCULATEUR */}
-      <section id="tarifs" style={{ padding: '80px 20px', maxWidth: '1100px', margin: '0 auto' }}>
-        <div style={{ textAlign: 'center', marginBottom: '48px' }}>
+      <section id="tarifs" style={{ padding: 'clamp(48px, 6vw, 80px) 16px', maxWidth: '1100px', margin: '0 auto' }}>
+        <div style={{ textAlign: 'center', marginBottom: 'clamp(32px, 5vw, 48px)' }}>
           <span style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--color-accent)' }}>
             Modèle économique transparent
           </span>
-          <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 400, fontSize: 'clamp(30px, 4vw, 44px)', margin: '8px 0' }}>
+          <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 400, fontSize: 'clamp(28px, 4vw, 44px)', margin: '8px 0' }}>
             Calculez votre rentabilité
           </h2>
-          <p style={{ fontSize: '16px', color: 'var(--muted)', maxWidth: '560px', margin: '0 auto' }}>
+          <p style={{ fontSize: 'clamp(15px, 1.8vw, 16px)', color: 'var(--muted)', maxWidth: '560px', margin: '0 auto' }}>
             Vous ne payez que lorsqu'une livraison aboutit.
           </p>
         </div>
 
-        <div style={{ padding: '32px', borderRadius: '32px', background: 'var(--card)', boxShadow: 'var(--shadow-soft)', border: '1px solid var(--color-divider)', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '32px', alignItems: 'center' }}>
+        <div style={{ padding: 'clamp(20px, 3.5vw, 32px)', borderRadius: '32px', background: 'var(--card)', boxShadow: 'var(--shadow-soft)', border: '1px solid var(--color-divider)', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: 'clamp(20px, 3.5vw, 32px)', alignItems: 'center' }}>
           <div>
             <label style={{ fontSize: '14px', fontWeight: 600, display: 'block', marginBottom: '8px' }}>
               Montant de votre livraison :

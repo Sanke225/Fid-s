@@ -119,10 +119,10 @@ export function InvoiceModal({ project, onClose }: InvoiceModalProps) {
         {/* Corps du document Facture */}
         <div
           id="invoice-printable"
-          style={{ padding: '36px 40px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '28px' }}
+          style={{ padding: 'clamp(18px, 4vw, 36px) clamp(16px, 4vw, 36px)', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '24px' }}
         >
           {/* En-tête officiel */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
                 <span
@@ -160,7 +160,7 @@ export function InvoiceModal({ project, onClose }: InvoiceModalProps) {
           <div style={{ height: '1px', background: 'var(--color-divider)' }} />
 
           {/* Parties prenantes */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '20px' }}>
             <div>
               <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)' }}>
                 Développeur & Livrable
@@ -183,8 +183,8 @@ export function InvoiceModal({ project, onClose }: InvoiceModalProps) {
           <div style={{ border: '1px solid var(--color-divider)', borderRadius: '16px', overflow: 'hidden' }}>
             <div
               style={{
-                display: 'grid',
-                gridTemplateColumns: '2fr 1fr',
+                display: 'flex',
+                justifyContent: 'space-between',
                 padding: '10px 16px',
                 background: 'var(--color-surface)',
                 fontWeight: 600,
@@ -196,8 +196,8 @@ export function InvoiceModal({ project, onClose }: InvoiceModalProps) {
               <span>Désignation du logiciel</span>
               <span style={{ textAlign: 'right' }}>Montant</span>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', padding: '16px', fontSize: '14px' }}>
-              <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', padding: '16px', fontSize: '14px' }}>
+              <div style={{ maxWidth: '400px' }}>
                 <strong>{project.name}</strong>
                 <span style={{ display: 'block', fontSize: '12px', color: 'var(--muted)', marginTop: '4px' }}>
                   Livraison certifiée avec instance dédiée ({project.clientUrl || `${project.publicToken}.app.recette.ci`})
@@ -211,16 +211,16 @@ export function InvoiceModal({ project, onClose }: InvoiceModalProps) {
           </div>
 
           {/* Synthèse des montants */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end', fontSize: '13px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', width: '240px', color: 'var(--muted)' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end', width: '100%', fontSize: '13px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', width: 'min(100%, 260px)', color: 'var(--muted)' }}>
               <span>Montant HT / Total :</span>
               <strong>{amountFormatted}</strong>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', width: '240px', color: 'var(--muted)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', width: 'min(100%, 260px)', color: 'var(--muted)' }}>
               <span>Commission tiers (3%) :</span>
               <span>{platformFee}</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', width: '240px', color: 'var(--success)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', width: 'min(100%, 260px)', color: 'var(--success)' }}>
               <span>Net versé au développeur :</span>
               <strong>{netAmount}</strong>
             </div>
@@ -228,7 +228,7 @@ export function InvoiceModal({ project, onClose }: InvoiceModalProps) {
               style={{
                 display: 'flex',
                 justifyContent: 'space-between',
-                width: '240px',
+                width: 'min(100%, 260px)',
                 borderTop: '2px solid var(--color-divider)',
                 paddingTop: '8px',
                 fontSize: '16px'

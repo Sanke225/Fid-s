@@ -94,7 +94,7 @@ export default function DevProjectDetailPage({ params }: { params: Promise<{ id:
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '10px' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
           {project.status === 'delivered' && (
             <button
               onClick={() => setInvoiceModalOpen(true)}
@@ -129,8 +129,8 @@ export default function DevProjectDetailPage({ params }: { params: Promise<{ id:
       </div>
 
       {/* TIMELINE 5 ÉTAPES */}
-      <div style={{ padding: '24px', borderRadius: '28px', background: 'var(--card)', boxShadow: 'var(--shadow-soft)', border: '1px solid var(--color-divider)' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', position: 'relative' }}>
+      <div style={{ padding: 'clamp(16px, 3vw, 24px)', borderRadius: '28px', background: 'var(--card)', boxShadow: 'var(--shadow-soft)', border: '1px solid var(--color-divider)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 160px), 1fr))', gap: '12px', position: 'relative' }}>
           {STEPS.map((s, idx) => {
             const isDone = idx < currentStepIdx;
             const isCur = idx === currentStepIdx;
@@ -179,7 +179,7 @@ export default function DevProjectDetailPage({ params }: { params: Promise<{ id:
       </div>
 
       {/* LIEN DE LIVRAISON & ACTIONS DE PARTAGE */}
-      <div style={{ padding: '24px', borderRadius: '28px', background: 'var(--grad-soft)', border: '1px solid var(--color-accent-200)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div style={{ padding: 'clamp(18px, 3vw, 24px)', borderRadius: '28px', background: 'var(--grad-soft)', border: '1px solid var(--color-accent-200)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
           <div>
             <span style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--color-accent-800)' }}>
@@ -190,7 +190,7 @@ export default function DevProjectDetailPage({ params }: { params: Promise<{ id:
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '10px' }}>
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
             <button
               onClick={copyLink}
               className="btn btn-secondary"
@@ -226,9 +226,9 @@ export default function DevProjectDetailPage({ params }: { params: Promise<{ id:
       </div>
 
       {/* CONSOLE DES LOGS D’INSTALLATION & ARCHITECTURE */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', gap: '20px' }}>
         {/* Terminal logs */}
-        <div style={{ padding: '24px', borderRadius: '28px', background: 'var(--card)', boxShadow: 'var(--shadow-soft)', border: '1px solid var(--color-divider)', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        <div style={{ padding: 'clamp(18px, 3vw, 24px)', borderRadius: '28px', background: 'var(--card)', boxShadow: 'var(--shadow-soft)', border: '1px solid var(--color-divider)', display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <strong style={{ fontSize: '16px' }}>Journal d'exécution du conteneur</strong>
           <div
             style={{
@@ -240,9 +240,9 @@ export default function DevProjectDetailPage({ params }: { params: Promise<{ id:
               fontSize: '12px',
               height: '240px',
               overflowY: 'auto',
+              overflowX: 'auto',
               display: 'flex',
               flexDirection: 'column',
-              gap: '6px'
             }}
           >
             {(project.logs || []).map((l, idx) => (

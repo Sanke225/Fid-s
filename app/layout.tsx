@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { RecetteProvider } from '@/lib/context';
 import { ToastProvider } from '@/components/Toast';
@@ -9,6 +9,12 @@ import { CmdPalette } from '@/components/CmdPalette';
 export const metadata: Metadata = {
   title: 'Recette · La livraison contre paiement, pour les logiciels.',
   description: 'Recette est le tiers de confiance qui sécurise la livraison de logiciels entre freelances et clients. Opéré par Systalink.'
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
 };
 
 export default function RootLayout({

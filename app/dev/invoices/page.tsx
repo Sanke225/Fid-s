@@ -17,7 +17,7 @@ export default function DevInvoicesPage() {
         <span style={{ fontSize: '13px', fontWeight: 600, letterSpacing: '.05em', textTransform: 'uppercase', color: 'var(--muted)' }}>
           Comptabilité & Justificatifs
         </span>
-        <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 400, fontSize: '32px', margin: '4px 0 0' }}>
+        <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 400, fontSize: 'clamp(24px, 3.5vw, 32px)', margin: '4px 0 0' }}>
           Factures des livraisons terminées
         </h1>
       </div>
@@ -65,7 +65,7 @@ export default function DevInvoicesPage() {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
                 <strong style={{ fontSize: '17px', color: 'var(--color-accent-800)' }}>
                   {(p.amountXof || 0).toLocaleString('fr-FR')} FCFA
                 </strong>

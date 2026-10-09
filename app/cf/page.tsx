@@ -73,11 +73,12 @@ export default function CfPage() {
             </Link>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Link
               href="/cgu"
+              className="hidden sm:inline-block"
               style={{
-                fontSize: '14px',
+                fontSize: '13px',
                 color: 'var(--muted)',
                 textDecoration: 'none',
                 padding: '6px 12px',
@@ -85,7 +86,7 @@ export default function CfPage() {
                 transition: 'background .2s'
               }}
             >
-              ← Conditions Générales (CGU)
+              ← CGU
             </Link>
 
             <Link

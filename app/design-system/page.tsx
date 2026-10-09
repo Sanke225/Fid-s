@@ -15,7 +15,7 @@ export default function DesignSystemPage() {
         <span style={{ fontSize: '13px', fontWeight: 600, letterSpacing: '.05em', textTransform: 'uppercase', color: 'var(--color-accent)' }}>
           Design System Apple Level
         </span>
-        <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 400, fontSize: '38px', margin: '4px 0 8px' }}>
+        <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 400, fontSize: 'clamp(28px, 4vw, 38px)', margin: '4px 0 8px' }}>
           Système Visuel Recette
         </h1>
         <p style={{ fontSize: '16px', color: 'var(--muted)', margin: 0, maxWidth: '640px' }}>
@@ -126,17 +126,17 @@ export default function DesignSystemPage() {
         <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 400, fontSize: '22px', margin: 0 }}>
           Échelle Typographique
         </h2>
-        <div style={{ background: 'var(--card)', padding: '28px', borderRadius: '24px', border: '1px solid var(--color-divider)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div style={{ fontFamily: 'var(--font-heading)', fontSize: '42px', lineHeight: 1.1 }}>
+        <div style={{ background: 'var(--card)', padding: 'clamp(18px, 4vw, 28px)', borderRadius: '24px', border: '1px solid var(--color-divider)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'clamp(26px, 4vw, 42px)', lineHeight: 1.15 }}>
             Caprasimo Display 42px — La confiance codée.
           </div>
-          <div style={{ fontFamily: 'var(--font-heading)', fontSize: '32px' }}>
+          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'clamp(22px, 3.2vw, 32px)' }}>
             Titre de Section 32px — Livrez en confiance.
           </div>
-          <div style={{ fontFamily: 'var(--font-heading)', fontSize: '24px' }}>
+          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'clamp(18px, 2.5vw, 24px)' }}>
             Sous-titre 24px — Le tiers de confiance des logiciels.
           </div>
-          <p style={{ fontFamily: 'var(--font-body)', fontSize: '16px', color: 'var(--muted)', margin: 0 }}>
+          <p style={{ fontFamily: 'var(--font-body)', fontSize: 'clamp(14px, 1.8vw, 16px)', color: 'var(--muted)', margin: 0 }}>
             Figtree Body 16px — Recette garantit la livraison contre paiement pour les logiciels sur mesure dans toute la zone UEMOA et au-delà.
           </p>
         </div>

@@ -73,11 +73,12 @@ export default function CguPage() {
             </Link>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Link
               href="/cf"
+              className="hidden sm:inline-block"
               style={{
-                fontSize: '14px',
+                fontSize: '13px',
                 color: 'var(--muted)',
                 textDecoration: 'none',
                 padding: '6px 12px',
@@ -129,7 +130,7 @@ export default function CguPage() {
       </header>
 
       {/* Contenu principal */}
-      <main style={{ maxWidth: '860px', margin: '0 auto', padding: '48px 20px 80px', width: '100%', boxSizing: 'border-box' }}>
+      <main style={{ maxWidth: '860px', margin: '0 auto', padding: 'clamp(24px, 5vw, 48px) clamp(16px, 4vw, 24px) 80px', width: '100%', boxSizing: 'border-box' }}>
         
         {/* Titre et métadonnées */}
         <div style={{ marginBottom: '40px' }}>

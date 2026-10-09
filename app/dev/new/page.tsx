@@ -76,7 +76,7 @@ export default function DevWizardPage() {
           <span style={{ fontSize: '13px', fontWeight: 600, letterSpacing: '.05em', textTransform: 'uppercase', color: 'var(--muted)' }}>
             Livraison de logiciel
           </span>
-          <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 400, fontSize: '32px', margin: '4px 0 0' }}>
+          <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 400, fontSize: 'clamp(24px, 3.5vw, 32px)', margin: '4px 0 0' }}>
             Nouveau projet à livrer
           </h1>
         </div>
@@ -133,7 +133,7 @@ export default function DevWizardPage() {
               >
                 {isDone ? '✓' : s.n}
               </span>
-              <span style={{ fontSize: '12px', fontWeight: isCur ? 700 : 500, color: isCur ? 'var(--color-text)' : 'var(--muted)', whiteSpace: 'nowrap' }}>
+              <span className="hidden sm:inline" style={{ fontSize: '12px', fontWeight: isCur ? 700 : 500, color: isCur ? 'var(--color-text)' : 'var(--muted)', whiteSpace: 'nowrap' }}>
                 {s.label}
               </span>
             </div>
@@ -141,8 +141,18 @@ export default function DevWizardPage() {
         })}
       </div>
 
+      {/* Libellé de l'étape sur petit mobile */}
+      <div className="sm:hidden" style={{ textAlign: 'center', marginTop: '-20px', marginBottom: '20px', fontSize: '13px', fontWeight: 700, color: 'var(--color-accent)' }}>
+        Étape {step}/4 : {[
+          'Infos & Montant',
+          'Code & Archive',
+          'Manifeste & Stack',
+          'Lancement'
+        ][step - 1]}
+      </div>
+
       {/* Contenu de chaque étape */}
-      <div style={{ padding: 'clamp(24px, 4vw, 36px)', borderRadius: '32px', background: 'var(--card)', boxShadow: 'var(--shadow-soft)', border: '1px solid var(--color-divider)', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <div style={{ padding: 'clamp(20px, 4vw, 36px)', borderRadius: '32px', background: 'var(--card)', boxShadow: 'var(--shadow-soft)', border: '1px solid var(--color-divider)', display: 'flex', flexDirection: 'column', gap: '24px' }}>
         {step === 1 && (
           <>
             <div>
@@ -154,7 +164,7 @@ export default function DevWizardPage() {
               </span>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', gap: '16px' }}>
               <div>
                 <label style={{ fontSize: '13px', fontWeight: 600, display: 'block', marginBottom: '6px' }}>
                   Nom de l'application
@@ -267,7 +277,7 @@ export default function DevWizardPage() {
               </span>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', gap: '16px' }}>
               <div>
                 <label style={{ fontSize: '13px', fontWeight: 600, display: 'block', marginBottom: '6px' }}>
                   Version Node.js

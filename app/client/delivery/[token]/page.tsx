@@ -114,17 +114,17 @@ export default function ClientDeliveryPage({ params }: { params: Promise<{ token
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: '999px', background: 'var(--color-surface)', border: '1px solid var(--color-divider)', fontSize: '12px' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '10px' }}>
+            <div className="hidden sm:inline-flex" style={{ alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: '999px', background: 'var(--color-surface)', border: '1px solid var(--color-divider)', fontSize: '12px' }}>
               <span style={{ color: 'var(--success)' }}>🔒</span>
               <span>Paiement direct au développeur</span>
             </div>
 
             {!isDelivered ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '10px' }}>
                 <div style={{ textAlign: 'right' }}>
                   <span style={{ fontSize: '11px', color: 'var(--muted)', display: 'block' }}>Montant à régler :</span>
-                  <strong style={{ fontSize: '18px', color: 'var(--color-accent-800)' }}>{amountFmt}</strong>
+                  <strong style={{ fontSize: 'clamp(15px, 2.5vw, 18px)', color: 'var(--color-accent-800)' }}>{amountFmt}</strong>
                 </div>
                 <button
                   onClick={() => setPaymentModalOpen(true)}
@@ -133,12 +133,12 @@ export default function ClientDeliveryPage({ params }: { params: Promise<{ token
                     display: 'flex',
                     alignItems: 'center',
                     gap: '8px',
-                    padding: '12px 22px',
+                    padding: '10px 18px',
                     borderRadius: '999px',
                     background: 'var(--grad)',
                     color: '#fff',
                     border: 0,
-                    fontSize: '14px',
+                    fontSize: '13px',
                     fontWeight: 700,
                     cursor: 'pointer',
                     boxShadow: '0 6px 18px rgba(255,106,0,.35)',
@@ -149,7 +149,7 @@ export default function ClientDeliveryPage({ params }: { params: Promise<{ token
                 </button>
               </div>
             ) : (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '10px' }}>
                 <span style={{ padding: '6px 14px', borderRadius: '999px', background: 'var(--success-100)', color: 'var(--success-800)', fontSize: '13px', fontWeight: 700 }}>
                   ✓ Débloqué et Livré
                 </span>
@@ -316,7 +316,7 @@ export default function ClientDeliveryPage({ params }: { params: Promise<{ token
                 ))}
               </div>
 
-              <div style={{ marginTop: 'auto', padding: '16px 20px', borderRadius: '18px', background: 'var(--color-surface)', border: '1px solid var(--color-divider)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ marginTop: 'auto', padding: '16px 20px', borderRadius: '18px', background: 'var(--color-surface)', border: '1px solid var(--color-divider)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
                 <span style={{ fontSize: '13px', color: 'var(--muted)' }}>
                   ℹ️ Ceci est une application réelle qui tourne sur une base PostgreSQL dédiée.
                 </span>
@@ -331,8 +331,8 @@ export default function ClientDeliveryPage({ params }: { params: Promise<{ token
 
       {/* MODAL DE PAIEMENT MOBILE MONEY & 8 ÉTAPES DE PASSATION */}
       {paymentModalOpen && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(10,8,6,.7)', backdropFilter: 'blur(14px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div style={{ background: 'var(--card)', color: 'var(--color-text)', borderRadius: '32px', width: '100%', maxWidth: '520px', boxShadow: 'var(--shadow-float)', border: '1px solid var(--color-divider)', padding: '32px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(10,8,6,.7)', backdropFilter: 'blur(14px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+          <div style={{ background: 'var(--card)', color: 'var(--color-text)', borderRadius: '32px', width: '100%', maxWidth: '520px', boxShadow: 'var(--shadow-float)', border: '1px solid var(--color-divider)', padding: 'clamp(20px, 4vw, 32px)', display: 'flex', flexDirection: 'column', gap: '20px' }}>
             {!isHandoverInProgress ? (
               <>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -352,7 +352,7 @@ export default function ClientDeliveryPage({ params }: { params: Promise<{ token
                   <label style={{ fontSize: '13px', fontWeight: 600, display: 'block', marginBottom: '8px' }}>
                     Moyen de paiement Mobile Money
                   </label>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: '12px' }}>
                     <button
                       type="button"
                       onClick={() => setSelectedProvider('wave')}

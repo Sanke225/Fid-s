@@ -10,7 +10,6 @@ import {
   PlusIcon,
   WalletIcon,
   InvoiceIcon,
-  ClientsIcon,
   ExternalIcon,
   LogoIcon
 } from '@/components/Icons';
@@ -88,12 +87,6 @@ export function DevSidebar() {
       title: 'Navigation externe',
       items: [
         {
-          href: '/client/dashboard',
-          label: 'Espace Client (Test)',
-          icon: <ClientsIcon size={19} />,
-          badge: null
-        },
-        {
           href: '/',
           label: 'Site vitrine',
           icon: <ExternalIcon size={19} />,
@@ -141,26 +134,26 @@ export function DevSidebar() {
             </div>
           </div>
         </div>
-
-        {/* Bouton fermeture sur mobile */}
-        {mobileOpen && (
-          <button
-            onClick={() => setMobileOpen(false)}
-            style={{
-              display: 'grid',
-              placeItems: 'center',
-              width: '32px',
-              height: '32px',
-              borderRadius: '50%',
-              border: '1px solid var(--color-divider)',
-              background: 'var(--color-surface)',
-              color: 'var(--color-text)',
-              cursor: 'pointer'
-            }}
-          >
-            ✕
-          </button>
-        )}
+        <button
+          onClick={() => setMobileOpen(false)}
+          className="md:hidden"
+          aria-label="Fermer le menu"
+          style={{
+            border: '1px solid var(--color-divider)',
+            background: 'var(--color-surface)',
+            width: '32px',
+            height: '32px',
+            borderRadius: '50%',
+            cursor: 'pointer',
+            display: 'grid',
+            placeItems: 'center',
+            color: 'var(--color-text)',
+            fontSize: '18px',
+            lineHeight: 1
+          }}
+        >
+          ✕
+        </button>
       </div>
 
       {/* Bouton d'action CTA : Créer un projet */}

@@ -15,6 +15,7 @@ export function Navbar() {
 
   const [notifsOpen, setNotifsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const notifsRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -35,6 +36,10 @@ export function Navbar() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
 
   const toggleTheme = () => {
     const next = isDark ? 'light' : 'dark';
@@ -65,7 +70,7 @@ export function Navbar() {
   }
 
   return (
-    <header style={{ position: 'sticky', top: 0, zIndex: 40, padding: '10px clamp(12px, 2.5vw, 28px) 4px', background: 'transparent' }}>
+    <header style={{ position: 'sticky', top: 0, zIndex: 40, padding: '8px clamp(8px, 2.5vw, 24px) 4px', background: 'transparent' }}>
       <nav
         style={{
           maxWidth: '1440px',
@@ -73,8 +78,8 @@ export function Navbar() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          gap: '12px',
-          padding: '8px 12px 8px 18px',
+          gap: '8px',
+          padding: '6px clamp(8px, 1.8vw, 14px) 6px clamp(10px, 2vw, 18px)',
           borderRadius: '999px',
           background: 'var(--glass-strong)',
           backdropFilter: 'blur(24px) saturate(1.6)',
@@ -84,8 +89,8 @@ export function Navbar() {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          {/* Bouton Hamburger mobile pour Espace Développeur */}
-          {pathname.startsWith('/dev') && (
+          {/* Bouton Hamburger mobile */}
+          {pathname.startsWith('/dev') ? (
             <button
               onClick={() => window.dispatchEvent(new CustomEvent('toggle-dev-sidebar'))}
               className="md:hidden"
@@ -99,7 +104,28 @@ export function Navbar() {
                 border: '1px solid var(--color-divider)',
                 background: 'var(--color-surface)',
                 color: 'var(--color-text)',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                flexShrink: 0
+              }}
+            >
+              <MenuIcon size={18} />
+            </button>
+          ) : (
+            <button
+              onClick={() => setMobileMenuOpen(prev => !prev)}
+              className="md:hidden"
+              aria-label="Ouvrir le menu de navigation"
+              style={{
+                display: 'grid',
+                placeItems: 'center',
+                width: '34px',
+                height: '34px',
+                borderRadius: '50%',
+                border: '1px solid var(--color-divider)',
+                background: 'var(--color-surface)',
+                color: 'var(--color-text)',
+                cursor: 'pointer',
+                flexShrink: 0
               }}
             >
               <MenuIcon size={18} />
@@ -110,12 +136,12 @@ export function Navbar() {
           <Link
             href="/"
             id="nav-logo"
-            style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none', color: 'var(--color-text)' }}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none', color: 'var(--color-text)' }}
           >
             <span
               style={{
-                width: '34px',
-                height: '34px',
+                width: '32px',
+                height: '32px',
                 borderRadius: '50%',
                 background: 'var(--grad)',
                 display: 'grid',
@@ -125,17 +151,17 @@ export function Navbar() {
                 flex: 'none'
               }}
             >
-              <LogoIcon size={18} color="#fff" />
+              <LogoIcon size={16} color="#fff" />
             </span>
-            <span style={{ fontFamily: 'var(--font-heading)', fontSize: '22px', letterSpacing: '-.01em' }}>
+            <span style={{ fontFamily: 'var(--font-heading)', fontSize: '20px', letterSpacing: '-.01em' }}>
               Recette
             </span>
             {role === 'admin' ? (
-              <span style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', padding: '2px 8px', borderRadius: '999px', background: 'var(--grad)', color: '#fff' }}>
+              <span className="hidden sm:inline" style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', padding: '2px 8px', borderRadius: '999px', background: 'var(--grad)', color: '#fff' }}>
                 Admin
               </span>
             ) : role === 'client' ? (
-              <span style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', padding: '2px 8px', borderRadius: '999px', background: 'var(--color-accent-100)', color: 'var(--color-accent-800)' }}>
+              <span className="hidden sm:inline" style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', padding: '2px 8px', borderRadius: '999px', background: 'var(--color-accent-100)', color: 'var(--color-accent-800)' }}>
                 Client
               </span>
             ) : null}
@@ -165,32 +191,19 @@ export function Navbar() {
               </span>
             </div>
           ) : pathname.startsWith('/admin') ? (
-            <>
-              <Link
-                href="/admin/overview"
-                style={{
-                  padding: '8px 14px',
-                  borderRadius: '999px',
-                  textDecoration: 'none',
-                  color: 'var(--color-accent)',
-                  fontWeight: 700,
-                  background: 'var(--color-accent-100)'
-                }}
-              >
-                Télémétrie Serveur
-              </Link>
-              <Link
-                href="/dev/dashboard"
-                style={{
-                  padding: '8px 14px',
-                  borderRadius: '999px',
-                  textDecoration: 'none',
-                  color: 'var(--color-text)'
-                }}
-              >
-                Vue Développeur
-              </Link>
-            </>
+            <Link
+              href="/admin/overview"
+              style={{
+                padding: '8px 14px',
+                borderRadius: '999px',
+                textDecoration: 'none',
+                color: 'var(--color-accent)',
+                fontWeight: 700,
+                background: 'var(--color-accent-100)'
+              }}
+            >
+              Télémétrie Serveur
+            </Link>
           ) : (
             <>
               <a
@@ -227,15 +240,16 @@ export function Navbar() {
         </div>
 
         {/* Outils de droite : Cmd+K, Thème, Notifications, Profil */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           {/* Déclencheur Palette Cmd+K */}
           <button
             onClick={openCmd}
+            title="Recherche rapide (⌘K)"
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '6px',
-              padding: '6px 12px',
+              gap: '5px',
+              padding: '6px 10px',
               borderRadius: '999px',
               border: '1px solid var(--color-divider)',
               background: 'var(--color-surface)',
@@ -246,7 +260,7 @@ export function Navbar() {
             }}
           >
             <SearchIcon size={14} />
-            <span style={{ fontFamily: 'var(--mono)', fontSize: '11px', background: 'var(--card)', padding: '2px 6px', borderRadius: '6px' }}>
+            <span className="hidden sm:inline" style={{ fontFamily: 'var(--mono)', fontSize: '11px', background: 'var(--card)', padding: '2px 6px', borderRadius: '6px' }}>
               ⌘K
             </span>
           </button>
@@ -256,8 +270,8 @@ export function Navbar() {
             onClick={toggleTheme}
             title="Changer de thème"
             style={{
-              width: '38px',
-              height: '38px',
+              width: '34px',
+              height: '34px',
               borderRadius: '50%',
               border: '1px solid var(--color-divider)',
               background: 'transparent',
@@ -511,6 +525,181 @@ export function Navbar() {
           </div>
         </div>
       </nav>
+
+      {/* Menu Drawer Mobile pour le site vitrine et pages publiques */}
+      {mobileMenuOpen && (
+        <div
+          className="md:hidden"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 100,
+            display: 'flex'
+          }}
+        >
+          {/* Backdrop blur */}
+          <div
+            onClick={() => setMobileMenuOpen(false)}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(0,0,0,0.5)',
+              backdropFilter: 'blur(4px)',
+              WebkitBackdropFilter: 'blur(4px)'
+            }}
+          />
+
+          {/* Drawer Content */}
+          <div
+            style={{
+              position: 'relative',
+              width: '300px',
+              maxWidth: '85vw',
+              height: '100%',
+              background: 'var(--card)',
+              borderRight: '1px solid var(--color-divider)',
+              boxShadow: 'var(--shadow-float)',
+              padding: '24px 20px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '20px',
+              zIndex: 101,
+              overflowY: 'auto'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    background: 'var(--grad)',
+                    display: 'grid',
+                    placeItems: 'center',
+                    color: '#fff',
+                    boxShadow: '0 4px 12px rgba(255,106,0,.35)'
+                  }}
+                >
+                  <LogoIcon size={16} color="#fff" />
+                </span>
+                <span style={{ fontFamily: 'var(--font-heading)', fontSize: '20px' }}>
+                  Recette
+                </span>
+              </div>
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                aria-label="Fermer le menu"
+                style={{
+                  border: '1px solid var(--color-divider)',
+                  background: 'var(--color-surface)',
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  cursor: 'pointer',
+                  display: 'grid',
+                  placeItems: 'center',
+                  color: 'var(--color-text)',
+                  fontSize: '18px'
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingTop: '10px' }}>
+              <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.05em' }}>
+                Navigation
+              </span>
+              <a
+                href="/#fonctionnement"
+                onClick={() => setMobileMenuOpen(false)}
+                style={{ padding: '10px 14px', borderRadius: '14px', background: 'var(--color-surface)', textDecoration: 'none', color: 'var(--color-text)', fontSize: '14px', fontWeight: 600 }}
+              >
+                Comment ça marche
+              </a>
+              <a
+                href="/#demo"
+                onClick={() => setMobileMenuOpen(false)}
+                style={{ padding: '10px 14px', borderRadius: '14px', background: 'var(--color-surface)', textDecoration: 'none', color: 'var(--color-text)', fontSize: '14px', fontWeight: 600 }}
+              >
+                Démo en 3 min
+              </a>
+              <a
+                href="/#tarifs"
+                onClick={() => setMobileMenuOpen(false)}
+                style={{ padding: '10px 14px', borderRadius: '14px', background: 'var(--color-surface)', textDecoration: 'none', color: 'var(--color-text)', fontSize: '14px', fontWeight: 600 }}
+              >
+                Tarifs &amp; Calculateur
+              </a>
+              <a
+                href="/#securite"
+                onClick={() => setMobileMenuOpen(false)}
+                style={{ padding: '10px 14px', borderRadius: '14px', background: 'var(--color-surface)', textDecoration: 'none', color: 'var(--color-text)', fontSize: '14px', fontWeight: 600 }}
+              >
+                Sécurité &amp; Tech
+              </a>
+              <a
+                href="/#faq"
+                onClick={() => setMobileMenuOpen(false)}
+                style={{ padding: '10px 14px', borderRadius: '14px', background: 'var(--color-surface)', textDecoration: 'none', color: 'var(--color-text)', fontSize: '14px', fontWeight: 600 }}
+              >
+                FAQ
+              </a>
+              <Link
+                href="/design-system"
+                onClick={() => setMobileMenuOpen(false)}
+                style={{ padding: '10px 14px', borderRadius: '14px', background: 'var(--color-surface)', textDecoration: 'none', color: 'var(--color-text)', fontSize: '14px', fontWeight: 600 }}
+              >
+                Design System
+              </Link>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', borderTop: '1px solid var(--color-divider)', paddingTop: '16px' }}>
+              <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.05em' }}>
+                Espaces
+              </span>
+              <Link
+                href="/dev/dashboard"
+                onClick={() => setMobileMenuOpen(false)}
+                style={{ padding: '8px 12px', fontSize: '13px', color: 'var(--color-text)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}
+              >
+                👨‍💻 Espace Développeur
+              </Link>
+              <Link
+                href="/client/dashboard"
+                onClick={() => setMobileMenuOpen(false)}
+                style={{ padding: '8px 12px', fontSize: '13px', color: 'var(--color-text)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}
+              >
+                🏢 Portail Client
+              </Link>
+            </div>
+
+            <div style={{ marginTop: 'auto', paddingTop: '16px' }}>
+              <Link
+                href="/auth"
+                onClick={() => setMobileMenuOpen(false)}
+                className="btn btn-primary"
+                style={{
+                  width: '100%',
+                  padding: '14px',
+                  borderRadius: '999px',
+                  background: 'var(--grad)',
+                  color: '#fff',
+                  textDecoration: 'none',
+                  fontSize: '14px',
+                  fontWeight: 700,
+                  display: 'flex',
+                  justifyContent: 'center',
+                  boxSizing: 'border-box'
+                }}
+              >
+                Envoyer mon projet →
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 }

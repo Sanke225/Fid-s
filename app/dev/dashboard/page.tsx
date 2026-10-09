@@ -83,7 +83,7 @@ export default function DevDashboardPage() {
       </div>
 
       {/* 4 CARTES KPI */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: '16px' }}>
         <div style={{ padding: '22px', borderRadius: '26px', background: 'var(--card)', boxShadow: 'var(--shadow-soft)', border: '1px solid var(--color-divider)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '13px', color: 'var(--muted)' }}>Revenus perçus</span>
@@ -138,17 +138,17 @@ export default function DevDashboardPage() {
       </div>
 
       {/* SECTION GRAPHIQUE & ACTIVITÉ EN DIRECT */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', gap: '20px' }}>
         {/* Graphique des revenus */}
         <div style={{ padding: '24px', borderRadius: '28px', background: 'var(--card)', boxShadow: 'var(--shadow-soft)', border: '1px solid var(--color-divider)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
             <div>
               <span style={{ fontSize: '13px', color: 'var(--muted)' }}>Revenus par moyen de paiement</span>
               <strong style={{ display: 'block', fontSize: '22px', fontFamily: 'var(--font-heading)', marginTop: '2px' }}>
                 Historique 12 mois
               </strong>
             </div>
-            <div style={{ display: 'flex', gap: '12px', fontSize: '12px' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', fontSize: '12px' }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'var(--color-accent)' }} /> Wave
               </span>
@@ -262,7 +262,7 @@ export default function DevDashboardPage() {
                   (e.currentTarget as HTMLElement).style.transform = 'none';
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: '240px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: '1 1 200px', minWidth: 0 }}>
                   <span
                     style={{
                       width: '40px',

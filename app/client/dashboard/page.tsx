@@ -11,7 +11,7 @@ import { Project } from '@/lib/types';
 
 export default function ClientDashboardPage() {
   const router = useRouter();
-  const { state, switchRole } = useRecette();
+  const { state } = useRecette();
   const { showToast } = useToast();
 
   const [selectedInvoiceProj, setSelectedInvoiceProj] = useState<Project | null>(null);
@@ -34,30 +34,16 @@ export default function ClientDashboardPage() {
           <span style={{ fontSize: '13px', fontWeight: 600, letterSpacing: '.05em', textTransform: 'uppercase', color: 'var(--muted)' }}>
             Portail Client
           </span>
-          <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 400, fontSize: 'clamp(28px, 3vw, 38px)', margin: '4px 0 0' }}>
+          <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 400, fontSize: 'clamp(26px, 3vw, 38px)', margin: '4px 0 0' }}>
             Bienvenue, {state.currentUser.fullName}
           </h1>
-        </div>
-
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button
-            onClick={() => {
-              switchRole('dev');
-              showToast('Passé en mode Développeur', 'success');
-              router.push('/dev/dashboard');
-            }}
-            className="btn btn-secondary"
-            style={{ padding: '10px 18px', borderRadius: '999px', fontSize: '13px' }}
-          >
-            Passer en mode Développeur
-          </button>
         </div>
       </div>
 
       {/* Applications en attente de règlement */}
       {pendingApps.length > 0 && (
-        <div style={{ padding: '22px 24px', borderRadius: '26px', background: 'var(--grad-soft)', border: '1px solid var(--color-accent-200)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
-          <div>
+        <div style={{ padding: 'clamp(18px, 3vw, 24px)', borderRadius: '26px', background: 'var(--grad-soft)', border: '1px solid var(--color-accent-200)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
+          <div style={{ maxWidth: '680px' }}>
             <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-accent-800)', textTransform: 'uppercase' }}>
               Action requise
             </span>
@@ -95,7 +81,7 @@ export default function ClientDashboardPage() {
           Mes applications en service ({deliveredApps.length})
         </h2>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', gap: '20px' }}>
           {deliveredApps.length === 0 ? (
             <div style={{ gridColumn: '1 / -1', padding: '40px', textAlign: 'center', background: 'var(--card)', borderRadius: '24px', border: '1px solid var(--color-divider)', color: 'var(--muted)' }}>
               Vous n'avez pas encore d'application livrée. Vos applications apparaîtront ici dès que le paiement Mobile Money sera validé.
@@ -161,11 +147,11 @@ export default function ClientDashboardPage() {
                   </div>
                 )}
 
-                <div style={{ display: 'flex', gap: '10px', marginTop: 'auto', paddingTop: '8px' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: 'auto', paddingTop: '8px' }}>
                   <button
                     onClick={() => setSelectedInvoiceProj(app)}
                     className="btn btn-secondary"
-                    style={{ flex: 1, padding: '10px', borderRadius: '999px', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                    style={{ flex: '1 1 120px', padding: '10px', borderRadius: '999px', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                   >
                     <InvoiceIcon size={14} /> Facture PDF
                   </button>
@@ -173,7 +159,7 @@ export default function ClientDashboardPage() {
                     <button
                       onClick={() => showToast('Téléchargement du code source .zip démarré', 'success')}
                       className="btn btn-secondary"
-                      style={{ flex: 1, padding: '10px', borderRadius: '999px', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                      style={{ flex: '1 1 120px', padding: '10px', borderRadius: '999px', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                     >
                       <DownloadIcon size={14} /> Code source
                     </button>

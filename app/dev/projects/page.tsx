@@ -76,7 +76,7 @@ export default function DevProjectsPage() {
 
       {/* Barre de recherche et filtres */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ position: 'relative', flex: 1, minWidth: '260px', maxWidth: '440px' }}>
+        <div style={{ position: 'relative', flex: 1, minWidth: 'min(100%, 260px)', maxWidth: '440px' }}>
           <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)' }}>
             <SearchIcon size={18} />
           </span>
@@ -132,7 +132,7 @@ export default function DevProjectsPage() {
       </div>
 
       {/* Grille des cartes projets */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '20px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 300px), 1fr))', gap: '20px' }}>
         {list.length === 0 ? (
           <div style={{ gridColumn: '1 / -1', padding: '60px 20px', textAlign: 'center', background: 'var(--card)', borderRadius: '28px', border: '1px solid var(--color-divider)', color: 'var(--muted)' }}>
             Aucun projet ne correspond aux critères de recherche.

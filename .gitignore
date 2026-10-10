@@ -41,3 +41,8 @@ Fid-s/
 
 *.tsbuildinfo
 uploads/
+next-env.d.ts
+!.env.example
+
+# prisma client généré
+/lib/generated

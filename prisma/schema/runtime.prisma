@@ -1,0 +1,138 @@
+// Code déposé, installation et espaces Docker (blocs 2 et 3).
+// Les champs *Encrypted passent par lib/crypto.
+
+enum BuildStatus {
+  queued
+  running
+  succeeded
+  failed
+
+  @@map("build_status")
+}
+
+enum LogStream {
+  stdout
+  stderr
+  system
+
+  @@map("log_stream")
+}
+
+enum SpaceKind {
+  demo
+  client
+
+  @@map("space_kind")
+}
+
+enum SpaceStatus {
+  provisioning
+  running
+  failed
+  destroyed
+
+  @@map("space_status")
+}
+
+model SourceArchive {
+  id               String    @id @default(uuid())
+  deliveryId       String    @map("delivery_id")
+  delivery         Delivery  @relation(fields: [deliveryId], references: [id], onDelete: Restrict)
+  originalFilename String    @map("original_filename")
+  sizeBytes        BigInt    @map("size_bytes")
+  sha256           String
+  storagePath      String    @map("storage_path")
+  // Chiffrement par enveloppe : clé propre à l'archive, chiffrée par la clé maîtresse.
+  wrappedKey       Bytes     @map("wrapped_key")
+  iv               Bytes
+  authTag          Bytes     @map("auth_tag")
+  uploadedAt       DateTime  @default(now()) @map("uploaded_at") @db.Timestamptz
+  purgedAt         DateTime? @map("purged_at") @db.Timestamptz
+
+  builds Build[]
+
+  @@index([deliveryId])
+  @@map("source_archives")
+}
+
+model DeliveryEnvVar {
+  id             String   @id @default(uuid())
+  deliveryId     String   @map("delivery_id")
+  delivery       Delivery @relation(fields: [deliveryId], references: [id], onDelete: Cascade)
+  name           String
+  valueEncrypted Bytes    @map("value_encrypted")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@unique([deliveryId, name])
+  @@map("delivery_env_vars")
+}
+
+model Build {
+  id              String        @id @default(uuid())
+  deliveryId      String        @map("delivery_id")
+  delivery        Delivery      @relation("DeliveryBuilds", fields: [deliveryId], references: [id], onDelete: Restrict)
+  sourceArchiveId String        @map("source_archive_id")
+  sourceArchive   SourceArchive @relation(fields: [sourceArchiveId], references: [id], onDelete: Restrict)
+  status          BuildStatus   @default(queued)
+  // Le recette.json validé.
+  manifest        Json?
+  imageRef        String?       @map("image_ref")
+  // unpack | manifest | install | build | package | timeout | oom
+  failureStage    String?       @map("failure_stage")
+  failureMessage  String?       @map("failure_message")
+  queuedAt        DateTime      @default(now()) @map("queued_at") @db.Timestamptz
+  startedAt       DateTime?     @map("started_at") @db.Timestamptz
+  finishedAt      DateTime?     @map("finished_at") @db.Timestamptz
+
+  currentFor Delivery?  @relation("DeliveryCurrentBuild")
+  logs       BuildLog[]
+
+  @@index([deliveryId])
+  @@index([status])
+  @@map("builds")
+}
+
+model BuildLog {
+  id      String    @id @default(uuid())
+  buildId String    @map("build_id")
+  build   Build     @relation(fields: [buildId], references: [id], onDelete: Cascade)
+  seq     Int
+  stream  LogStream
+  line    String
+  at      DateTime  @default(now()) @db.Timestamptz
+
+  @@unique([buildId, seq])
+  @@map("build_logs")
+}
+
+// Une application qui tourne : conteneur + réseau + base + adresse.
+model Space {
+  id                  String      @id @default(uuid())
+  deliveryId          String      @map("delivery_id")
+  delivery            Delivery    @relation(fields: [deliveryId], references: [id], onDelete: Restrict)
+  kind                SpaceKind
+  status              SpaceStatus @default(provisioning)
+  hostname            String      @unique
+  imageRef            String      @map("image_ref")
+  containerName       String      @map("container_name")
+  networkName         String      @map("network_name")
+  // sp_ + 12 caractères hexadécimaux, générés par nous, jamais depuis une saisie.
+  dbName              String      @map("db_name")
+  dbUser              String      @map("db_user")
+  dbPasswordEncrypted Bytes       @map("db_password_encrypted")
+  envEncrypted        Bytes       @map("env_encrypted")
+  // Même clé → même espace : empêche les doublons quand une tâche est rejouée.
+  idempotencyKey      String      @unique @map("idempotency_key")
+  lastHealthAt        DateTime?   @map("last_health_at") @db.Timestamptz
+  // capacity | database | migrate | start | healthcheck | runtime
+  failureStage        String?     @map("failure_stage")
+  failureMessage      String?     @map("failure_message")
+  createdAt           DateTime    @default(now()) @map("created_at") @db.Timestamptz
+  destroyedAt         DateTime?   @map("destroyed_at") @db.Timestamptz
+
+  backups Backup[]
+
+  @@index([deliveryId])
+  @@index([kind, status])
+  @@map("spaces")
+}

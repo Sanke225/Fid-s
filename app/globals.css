@@ -206,3 +206,71 @@ h1, h2, h3, h4 {
     opacity: 0;
   }
 }
+
+/* ------------------------------------------------------------------ */
+/* Page client (front/page-client) : jetons de couleur et animations   */
+/* ------------------------------------------------------------------ */
+@theme {
+  --font-mono: var(--font-geist-mono), ui-monospace, "SFMono-Regular", monospace;
+  --color-ink: #121826;
+  --color-ink-soft: #4a5568;
+  --color-ink-mute: #7a8597;
+  --color-line: #e3e7ee;
+  --color-paper: #f5f6f8;
+  --color-card: #ffffff;
+
+  --color-brand: #0d7a5f;
+  --color-brand-strong: #095c48;
+  --color-brand-soft: #e2f3ec;
+  --color-mint: #7fd6bd;
+
+  --color-night: #121826;
+  --color-night-2: #1b2333;
+  --color-night-line: #2a3446;
+
+  --color-warn: #b45309;
+  --color-warn-soft: #fdf3e2;
+  --color-danger: #b42318;
+  --color-danger-soft: #fdecea;
+
+  --animate-rise: rise 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  --animate-pop: pop 0.6s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+  --animate-shackle: shackle 0.7s 0.15s cubic-bezier(0.3, 1.5, 0.5, 1) both;
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes pop {
+    0% { opacity: 0; transform: scale(0.6); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+  @keyframes shackle {
+    from { transform: translateY(0) rotate(0); }
+    to { transform: translateY(-4px) rotate(-24deg); }
+  }
+}
+
+.pc-root {
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pc-root *, .pc-root *::before, .pc-root *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media print {
+  .no-print { display: none !important; }
+  .pc-root { background: white; }
+}

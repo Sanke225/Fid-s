@@ -1,0 +1,117 @@
+// Paiement direct client → dev (bloc 4). Recette ne détient jamais d'argent :
+// le client déclare son paiement, le dev confirme la réception (ou l'admin, après ticket).
+
+enum PaymentProvider {
+  wave
+  orange_money
+  moov_money
+  mtn_momo
+
+  @@map("payment_provider")
+}
+
+enum PaymentStatus {
+  // Le client dit avoir payé ; en attente de confirmation du dev.
+  declared
+  // Le dev (ou l'admin) a confirmé la réception : c'est le déblocage.
+  confirmed
+  // Le dev dit n'avoir rien reçu ; le client peut ouvrir un ticket.
+  rejected
+  expired
+
+  @@map("payment_status")
+}
+
+enum TicketStatus {
+  open
+  // Le dev a été relancé et doit répondre (48 h).
+  awaiting_dev
+  resolved_released
+  resolved_rejected
+
+  @@map("ticket_status")
+}
+
+// Numéro de réception du dev chez un opérateur. Affiché au client au moment de payer.
+model PayoutMethod {
+  id        String          @id @default(uuid())
+  userId    String          @map("user_id")
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider  PaymentProvider
+  phone     String
+  label     String?
+  active    Boolean         @default(true)
+  createdAt DateTime        @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime        @updatedAt @map("updated_at") @db.Timestamptz
+
+  payments Payment[]
+
+  @@unique([userId, provider, phone])
+  @@map("payout_methods")
+}
+
+model Payment {
+  id              String          @id @default(uuid())
+  deliveryId      String          @map("delivery_id")
+  delivery        Delivery        @relation(fields: [deliveryId], references: [id], onDelete: Restrict)
+  payoutMethodId  String          @map("payout_method_id")
+  payoutMethod    PayoutMethod    @relation(fields: [payoutMethodId], references: [id], onDelete: Restrict)
+  // Copiés au moment de la déclaration : ne changent plus même si le dev modifie ses moyens de paiement.
+  provider        PaymentProvider
+  payeePhone      String          @map("payee_phone")
+  // Copié depuis la livraison, jamais depuis la requête du client.
+  amountXof       Int             @map("amount_xof")
+  status          PaymentStatus   @default(declared)
+  payerName       String          @map("payer_name")
+  payerPhone      String          @map("payer_phone")
+  // Référence de la transaction saisie par le client (SMS de l'opérateur).
+  transactionRef  String          @map("transaction_ref")
+  // Empreinte SHA-256 du jeton remis au navigateur du client (suivi du paiement sans compte).
+  payerToken      String          @unique @map("payer_token")
+  decidedById     String?         @map("decided_by_id")
+  decidedBy       User?           @relation("PaymentDecidedBy", fields: [decidedById], references: [id], onDelete: SetNull)
+  rejectionReason String?         @map("rejection_reason")
+  declaredAt      DateTime        @default(now()) @map("declared_at") @db.Timestamptz
+  decidedAt       DateTime?       @map("decided_at") @db.Timestamptz
+  expiresAt       DateTime        @map("expires_at") @db.Timestamptz
+  // Un seul paiement confirmé par livraison : vaut deliveryId quand status = confirmed, nul sinon.
+  // L'unicité est garantie par la base (Postgres accepte plusieurs NULL dans un index unique).
+  confirmedFor    String?         @unique @map("confirmed_for")
+
+  tickets  Ticket[]
+  handover Handover?
+  invoice  Invoice?
+
+  @@unique([provider, transactionRef])
+  @@index([deliveryId, status])
+  @@map("payments")
+}
+
+// Ouvert par le client quand le dev conteste ou ne confirme pas. L'admin tranche sur preuves.
+model Ticket {
+  id           String       @id @default(uuid())
+  deliveryId   String       @map("delivery_id")
+  delivery     Delivery     @relation(fields: [deliveryId], references: [id], onDelete: Restrict)
+  paymentId    String       @map("payment_id")
+  payment      Payment      @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+  // Nul si le client n'a pas de compte (ticket ouvert depuis le lien de livraison).
+  openedById   String?      @map("opened_by_id")
+  openedBy     User?        @relation("TicketOpenedBy", fields: [openedById], references: [id], onDelete: SetNull)
+  status       TicketStatus @default(open)
+  clientClaim  String       @map("client_claim")
+  // Chemins des pièces jointes (captures de SMS, relevés), stockées chiffrées.
+  clientProofs String[]     @map("client_proofs")
+  devAnswer    String?      @map("dev_answer")
+  devProofs    String[]     @map("dev_proofs")
+  devDueAt     DateTime?    @map("dev_due_at") @db.Timestamptz
+  resolvedById String?      @map("resolved_by_id")
+  resolvedBy   User?        @relation("TicketResolvedBy", fields: [resolvedById], references: [id], onDelete: SetNull)
+  resolution   String?
+  createdAt    DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime     @updatedAt @map("updated_at") @db.Timestamptz
+  resolvedAt   DateTime?    @map("resolved_at") @db.Timestamptz
+
+  @@index([deliveryId])
+  @@index([status])
+  @@map("tickets")
+}

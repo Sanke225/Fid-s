@@ -1,0 +1,93 @@
+// Projets, livraisons et historique (bloc 1). deliveries.status n'est écrit QUE par core.transition().
+
+enum DeliveryStatus {
+  draft
+  building
+  build_failed
+  demo_ready
+  paid
+  handing_over
+  handover_failed
+  delivered
+  expired
+  cancelled
+
+  @@map("delivery_status")
+}
+
+model Project {
+  id          String   @id @default(uuid())
+  ownerId     String   @map("owner_id")
+  owner       User     @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  name        String
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  deliveries Delivery[]
+
+  @@index([ownerId])
+  @@map("projects")
+}
+
+model Delivery {
+  id                String         @id @default(uuid())
+  projectId         String         @map("project_id")
+  project           Project        @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  // Jeton du lien de livraison https://DOMAINE/l/<publicToken>
+  publicToken       String         @unique @map("public_token")
+  status            DeliveryStatus @default(draft)
+  // Entier en FCFA, >= 100 (vérifié dans le code).
+  amountXof         Int            @map("amount_xof")
+  includeSource     Boolean        @default(true) @map("include_source")
+  clientName        String         @map("client_name")
+  clientEmail       String?        @map("client_email")
+  clientPhone       String?        @map("client_phone")
+  // Compte du client s'il en a un ; sinon il passe par le lien seul.
+  clientUserId      String?        @map("client_user_id")
+  clientUser        User?          @relation("DeliveryClient", fields: [clientUserId], references: [id], onDelete: SetNull)
+  // Posé à la passation : donne accès à l'espace client sans compte.
+  clientAccessToken String?        @unique @map("client_access_token")
+  currentBuildId    String?        @unique @map("current_build_id")
+  currentBuild      Build?         @relation("DeliveryCurrentBuild", fields: [currentBuildId], references: [id], onDelete: SetNull)
+  failureCode       String?        @map("failure_code")
+  failureMessage    String?        @map("failure_message")
+  expiresAt         DateTime?      @map("expires_at") @db.Timestamptz
+  paidAt            DateTime?      @map("paid_at") @db.Timestamptz
+  deliveredAt       DateTime?      @map("delivered_at") @db.Timestamptz
+  createdAt         DateTime       @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime       @updatedAt @map("updated_at") @db.Timestamptz
+
+  events         Event[]
+  sourceArchives SourceArchive[]
+  envVars        DeliveryEnvVar[]
+  builds         Build[]          @relation("DeliveryBuilds")
+  spaces         Space[]
+  payments       Payment[]
+  tickets        Ticket[]
+  handover       Handover?
+  invoice        Invoice?
+
+  @@index([projectId])
+  @@index([clientUserId])
+  @@index([status])
+  @@map("deliveries")
+}
+
+// Journal des faits (domaine.verbe_au_passé). L'historique affiché au dev est la lecture de cette table.
+model Event {
+  id           String    @id @default(uuid())
+  deliveryId   String    @map("delivery_id")
+  delivery     Delivery  @relation(fields: [deliveryId], references: [id], onDelete: Restrict)
+  type         String
+  payload      Json      @default("{}")
+  // "user:<id>", "system", "admin:<id>"…
+  actor        String
+  occurredAt   DateTime  @default(now()) @map("occurred_at") @db.Timestamptz
+  // Nul tant que l'événement n'a pas été diffusé aux abonnés (rattrapage au redémarrage).
+  dispatchedAt DateTime? @map("dispatched_at") @db.Timestamptz
+
+  @@index([deliveryId, occurredAt])
+  @@index([dispatchedAt])
+  @@map("events")
+}

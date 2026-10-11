@@ -8,7 +8,7 @@ import { requireRole } from "@/lib/api/session";
 type Context = { params: Promise<{ id: string }> };
 
 // POST /api/v1/payments/:id/confirm — le dev a bien reçu l'argent : c'est le déblocage.
-// La passation (espace client, facture, accès) sera lancée par le worker sur payment.confirmed.
+// La livraison passe en fee_pending : la passation n'est lancée qu'après la confirmation des frais Fid’s (fee.confirmed).
 export const POST = handle<Context>(async (request, { params }) => {
   const dev = await requireRole(request, "dev");
   const { id } = await params;

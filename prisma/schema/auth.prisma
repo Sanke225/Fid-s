@@ -10,17 +10,19 @@ enum UserRole {
 }
 
 model User {
-  id            String    @id @default(uuid())
-  name          String
-  email         String    @unique
-  emailVerified Boolean   @default(false) @map("email_verified")
-  image         String?
+  id                  String    @id @default(uuid())
+  name                String
+  email               String    @unique
+  emailVerified       Boolean   @default(false) @map("email_verified")
+  image               String?
   // Choisi à l'inscription (dev ou client) ; nul tant qu'un compte Google n'a pas choisi. admin : par script uniquement.
-  role          UserRole?
-  phone         String?
-  businessName  String?   @map("business_name")
-  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  role                UserRole?
+  phone               String?
+  businessName        String?   @map("business_name")
+  // Dernière ouverture de la cloche : les événements plus récents sont « non lus ».
+  notificationsSeenAt DateTime? @map("notifications_seen_at") @db.Timestamptz
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   sessions         Session[]
   accounts         Account[]
@@ -30,6 +32,7 @@ model User {
   ticketsOpened    Ticket[]       @relation("TicketOpenedBy")
   ticketsResolved  Ticket[]       @relation("TicketResolvedBy")
   paymentsDecided  Payment[]      @relation("PaymentDecidedBy")
+  feesDecided      PlatformFee[]  @relation("PlatformFeeDecidedBy")
 
   @@map("users")
 }

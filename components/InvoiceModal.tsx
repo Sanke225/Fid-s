@@ -2,7 +2,8 @@
 
 import React from 'react';
 import { Project } from '@/lib/types';
-import { CloseIcon, DownloadIcon, LogoIcon } from './Icons';
+import { BrandLogo } from './Brand';
+import { CloseIcon, DownloadIcon } from './Icons';
 
 interface InvoiceModalProps {
   project: Project | null;
@@ -125,25 +126,12 @@ export function InvoiceModal({ project, onClose }: InvoiceModalProps) {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-                <span
-                  style={{
-                    width: '32px',
-                    height: '32px',
-                    borderRadius: '50%',
-                    background: 'var(--grad)',
-                    display: 'grid',
-                    placeItems: 'center',
-                    color: '#fff'
-                  }}
-                >
-                  <LogoIcon size={16} color="#fff" />
-                </span>
-                <span style={{ fontFamily: 'var(--font-heading)', fontSize: '24px' }}>Recette</span>
+                <BrandLogo height={32} />
               </div>
               <p style={{ fontSize: '12px', color: 'var(--muted)', margin: 0, lineHeight: 1.4 }}>
                 Plateforme tiers de confiance · Opéré par Systalink<br />
                 Cocody Riviera 3, Abidjan · République de Côte d'Ivoire<br />
-                RCCM : CI-ABJ-2024-B-11928 · contact@recette.ci
+                RCCM : CI-ABJ-2024-B-11928 · contact@fids.ci
               </p>
             </div>
             <div style={{ textAlign: 'right' }}>
@@ -200,7 +188,7 @@ export function InvoiceModal({ project, onClose }: InvoiceModalProps) {
               <div style={{ maxWidth: '400px' }}>
                 <strong>{project.name}</strong>
                 <span style={{ display: 'block', fontSize: '12px', color: 'var(--muted)', marginTop: '4px' }}>
-                  Livraison certifiée avec instance dédiée ({project.clientUrl || `${project.publicToken}.app.recette.ci`})
+                  Livraison certifiée avec instance dédiée ({project.clientUrl || `${project.publicToken}.app.fids.ci`})
                   {project.includeSource ? ' + Archive du code source complète' : ''}
                 </span>
               </div>
@@ -251,7 +239,7 @@ export function InvoiceModal({ project, onClose }: InvoiceModalProps) {
               lineHeight: 1.5
             }}
           >
-            🔒 <strong>Certificat de livraison Recette :</strong> Ce document atteste de la passation de l'application logicielle et de la libération immédiate des fonds vers le développeur conformément à la licence convenue.
+            🔒 <strong>Certificat de livraison Fid’s :</strong> Ce document atteste de la passation de l'application logicielle et de la libération immédiate des fonds vers le développeur conformément à la licence convenue.
           </div>
         </div>
       </div>

@@ -2,12 +2,24 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { useRecette } from '@/lib/context';
-import { ArrowLeftIcon, LogoIcon, MoonIcon, OrangeMoneyIcon, ShieldIcon, SunIcon, WaveIcon } from '@/components/Icons';
+import { useTheme } from '@/lib/theme';
+import { BrandLogo } from '@/components/Brand';
+import { ArrowLeftIcon, MoonIcon, ShieldIcon, SunIcon } from '@/components/Icons';
+import { PROVIDERS, PROVIDER_NAME, ProviderLogo } from '@/components/payments/ProviderLogo';
+
+const H2: React.CSSProperties = { fontFamily: 'var(--font-heading)', fontSize: '24px', fontWeight: 400, margin: '0 0 12px', color: 'var(--color-accent-800)' };
+const P: React.CSSProperties = { margin: '0 0 12px' };
+const P0: React.CSSProperties = { margin: 0 };
+const LIST: React.CSSProperties = { margin: 0, paddingLeft: '22px', display: 'flex', flexDirection: 'column', gap: '6px' };
+// Tailwind remet les listes à zéro : numéros et puces rétablis explicitement.
+const OL: React.CSSProperties = { ...LIST, listStyle: 'decimal' };
+const UL: React.CSSProperties = { ...LIST, listStyle: 'disc' };
+
+/** Moyens de paiement prévus (docs/decisions.md). */
+const PROVIDERS_CF = PROVIDERS.map(p => ({ name: PROVIDER_NAME[p], icon: <ProviderLogo provider={p} size={44} className="rounded-xl" /> }));
 
 export default function CfPage() {
-  const { state, setTheme } = useRecette();
-  const isDark = state.theme === 'dark';
+  const { isDark, setTheme } = useTheme();
 
   return (
     <div
@@ -55,21 +67,7 @@ export default function CfPage() {
                 color: 'var(--color-text)'
               }}
             >
-              <span
-                style={{
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '50%',
-                  background: 'var(--grad)',
-                  display: 'grid',
-                  placeItems: 'center',
-                  color: '#fff',
-                  boxShadow: '0 2px 8px rgba(255,106,0,.3)'
-                }}
-              >
-                <LogoIcon size={16} color="#fff" />
-              </span>
-              <span style={{ fontFamily: 'var(--font-heading)', fontSize: '20px' }}>Recette</span>
+              <BrandLogo height={30} />
             </Link>
           </div>
 
@@ -149,7 +147,7 @@ export default function CfPage() {
             }}
           >
             <ShieldIcon size={14} color="var(--success-800)" />
-            <span>Séquestre & Transactions Financières</span>
+            <span>Paiements & Livraison</span>
           </div>
           <h1
             style={{
@@ -163,7 +161,7 @@ export default function CfPage() {
             Conditions Financières (CF)
           </h1>
           <p style={{ fontSize: '16px', color: 'var(--muted)', margin: 0 }}>
-            Protocole de séquestre des paiements · Mobile Money & Cartes bancaires · Version 2026.1
+            Paiement direct au développeur · Mobile Money · Version 2026.2 · Mise à jour le 11 octobre 2026
           </p>
         </div>
 
@@ -181,123 +179,109 @@ export default function CfPage() {
             gap: '20px'
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-            <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: '#E6F4FE', display: 'grid', placeItems: 'center' }}>
-              <WaveIcon size={24} />
+          {PROVIDERS_CF.map(p => (
+            <div key={p.name} style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+              {p.icon}
+              <div>
+                <strong style={{ display: 'block', fontSize: '15px' }}>{p.name}</strong>
+                <span style={{ fontSize: '13px', color: 'var(--muted)' }}>Paiement direct au développeur</span>
+              </div>
             </div>
-            <div>
-              <strong style={{ display: 'block', fontSize: '15px' }}>Wave CI / SN</strong>
-              <span style={{ fontSize: '13px', color: 'var(--muted)' }}>Instantané · 0% commission dev</span>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-            <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: '#FFF0E6', display: 'grid', placeItems: 'center' }}>
-              <OrangeMoneyIcon size={24} />
-            </div>
-            <div>
-              <strong style={{ display: 'block', fontSize: '15px' }}>Orange Money</strong>
-              <span style={{ fontSize: '13px', color: 'var(--muted)' }}>Validation SMS OTP sécurisée</span>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-            <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'var(--color-surface)', display: 'grid', placeItems: 'center', fontSize: '20px' }}>
-              💳
-            </div>
-            <div>
-              <strong style={{ display: 'block', fontSize: '15px' }}>Cartes VISA / MC</strong>
-              <span style={{ fontSize: '13px', color: 'var(--muted)' }}>International · 3D Secure</span>
-            </div>
-          </div>
+          ))}
         </div>
 
-        {/* Articles des CF */}
+        {/* Articles des CF : conformes à docs/decisions.md (Fid’s ne détient jamais les fonds) */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '36px', lineHeight: 1.7, fontSize: '15px' }}>
-          
           <section>
-            <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '24px', fontWeight: 400, margin: '0 0 12px', color: 'var(--color-accent-800)' }}>
-              Article 1 · Mécanisme du Séquestre Garanti
-            </h2>
-            <p style={{ margin: '0 0 12px' }}>
-              Le séquestre Recette garantit la neutralité et la sécurité des transactions entre développeurs et clients. 
-              Lorsque le client valide la commande d'une application ou souhaite débloquer le code source définitif, les fonds sont consignés sur un compte de cantonnement sous contrôle de l'établissement financier partenaire de Systalink.
+            <h2 style={H2}>Article 1 · Fid’s ne détient jamais le paiement du développeur</h2>
+            <p style={P}>
+              Le client paie le développeur <strong>directement</strong>, sur l’un des numéros Mobile Money que le développeur a enregistrés dans son espace.
+              Fid’s n’est ni une banque, ni un établissement de paiement, ni un compte séquestre : <strong>le paiement destiné au développeur ne transite jamais par Fid’s</strong>, ni par Systalink, ni par l’administration de la plateforme.
             </p>
-            <p style={{ margin: 0 }}>
-              Pendant toute la durée de la mise sous séquestre, ni le client ni le développeur ne peuvent retirer unilatéralement les fonds sans que la condition technique de passation ou de résiliation légale ne soit remplie.
+            <p style={P0}>
+              Seuls les frais de service de Fid’s (article 2), dus par le client, sont versés à Fid’s, pour son propre compte. Ce que Fid’s garde jusqu’au règlement complet, c’est l’application : le code source et les accès restent chiffrés et ne sont remis au client qu’à la fin du parcours décrit à l’article 3.
             </p>
           </section>
 
           <section>
-            <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '24px', fontWeight: 400, margin: '0 0 12px', color: 'var(--color-accent-800)' }}>
-              Article 2 · Modèle Tarifaire & 0 % Commission Développeur
-            </h2>
-            <p style={{ margin: '0 0 12px' }}>
-              Afin de soutenir l'écosystème numérique africain et les créateurs indépendants, <strong>Recette n'applique aucune commission retenue sur le montant net perçu par le développeur</strong> pour les projets standards.
+            <h2 style={H2}>Article 2 · Tarification : 0 % pour le développeur</h2>
+            <p style={P}>
+              Le développeur ne paie rien : il reçoit <strong>100 % du montant convenu</strong>, directement sur son numéro. Le client règle à Fid’s des <strong>frais de service de 5 %</strong> du montant de la livraison (100 FCFA minimum, arrondis au franc supérieur), au moment de recevoir son application.
             </p>
-            <div style={{ padding: '16px 20px', borderRadius: '18px', background: 'var(--color-surface)', border: '1px solid var(--color-divider)', margin: '12px 0' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span>Montant convenu du projet (ex. 500 000 FCFA) :</span>
-                <strong>100 % versé au développeur</strong>
+            <div style={{ padding: '16px 20px', borderRadius: '18px', background: 'var(--color-surface)', border: '1px solid var(--color-divider)', margin: '12px 0', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: '8px' }}>
+                <span>Montant convenu (exemple) :</span>
+                <strong>500 000 FCFA</strong>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--muted)', fontSize: '13px' }}>
-                <span>Frais d'hébergement conteneur & passation :</span>
-                <span>Inclus ou pris en charge par le client</span>
+              <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: '8px' }}>
+                <span>Reçu par le développeur :</span>
+                <strong>500 000 FCFA (100 %)</strong>
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: '8px' }}>
+                <span>Frais de service Fid’s, payés par le client (5 %) :</span>
+                <strong>25 000 FCFA</strong>
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: '8px', color: 'var(--muted)', fontSize: '13px' }}>
+                <span>Total payé par le client :</span>
+                <span>525 000 FCFA, en deux paiements</span>
               </div>
             </div>
-            <p style={{ margin: 0 }}>
-              Les frais techniques éventuels d'opérateurs télécoms tiers (frais de retrait Mobile Money standard de 1% selon l'opérateur) demeurent à la charge du bénéficiaire selon la tarification en vigueur de son opérateur.
+            <p style={P0}>
+              Aucun abonnement. Les frais propres à chaque opérateur Mobile Money (envoi, retrait) restent régis par les conditions de l’opérateur concerné.
             </p>
           </section>
 
           <section>
-            <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '24px', fontWeight: 400, margin: '0 0 12px', color: 'var(--color-accent-800)' }}>
-              Article 3 · Validation et Déblocage Instantané
-            </h2>
-            <p style={{ margin: '0 0 12px' }}>
-              Le déblocage des fonds au profit du compte Mobile Money du développeur est déclenché immédiatement dès survenance de l'un des deux événements suivants :
-            </p>
-            <ol style={{ margin: 0, paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <li><strong>Validation explicite :</strong> Le client clique sur « Valider et payer » et confirme son paiement Mobile Money.</li>
-              <li><strong>Passation automatique :</strong> Les accès au code source, l'archive ZIP certifiée et les clés API sont transférés instantanément au client, et le montant net est crédité sur le solde du développeur.</li>
+            <h2 style={H2}>Article 3 · Paiement et déblocage de la livraison</h2>
+            <ol style={OL}>
+              <li>Le client teste l’application sur la démo hébergée, accessible par le lien de livraison.</li>
+              <li>S’il est satisfait, il paie le montant convenu au numéro Mobile Money du développeur de son choix, puis <strong>déclare son paiement</strong> en saisissant la référence de la transaction reçue par SMS.</li>
+              <li>Le développeur vérifie la réception sur son compte et clique sur <strong>« Dépôt confirmé »</strong>. La démo reste alors consultable, mais rien n’est encore remis.</li>
+              <li>Le client règle les <strong>frais de service de 5 %</strong> sur l’un des numéros de Fid’s indiqués sur sa page, depuis le même appareil, et déclare la référence de la transaction.</li>
+              <li>Dès que Fid’s a confirmé la réception des frais, la livraison est débloquée : l’application passe au nom du client, sur sa propre adresse, avec ses accès et, si prévu, le code source.</li>
             </ol>
-          </section>
-
-          <section>
-            <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '24px', fontWeight: 400, margin: '0 0 12px', color: 'var(--color-accent-800)' }}>
-              Article 4 · Délais d’Essai et Recette Fonctionnelle
-            </h2>
-            <p style={{ margin: '0 0 12px' }}>
-              Le client bénéficie d’une période de recette de <strong>72 heures</strong> (extensible à 7 jours sur accord préalable entre les parties) pour tester l’application sur l'URL de démonstration isolée.
-            </p>
-            <p style={{ margin: 0 }}>
-              Si aucune réclamation documentée n'est soumise durant ce délai et que le client n'a pas manifesté d'opposition motivée, la passation peut être clôturée selon les stipulations du contrat de mission.
+            <p style={{ ...P0, marginTop: '12px' }}>
+              Les montants faisant foi sont toujours ceux affichés par Fid’s sur la page de livraison. Le simple retour depuis l’application de l’opérateur ne débloque rien : seules les confirmations du développeur et de Fid’s, ou une décision de l’administration prévue à l’article 5, le permettent.
             </p>
           </section>
 
           <section>
-            <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '24px', fontWeight: 400, margin: '0 0 12px', color: 'var(--color-accent-800)' }}>
-              Article 5 · Remboursements et Déconsignation
-            </h2>
-            <p style={{ margin: '0 0 12px' }}>
-              Un remboursement au client peut intervenir exclusivement dans les cas suivants :
+            <h2 style={H2}>Article 4 · Essai et expiration de la démo</h2>
+            <p style={P}>
+              La démo reste accessible jusqu’à la date d’expiration indiquée sur la page de livraison. Le client n’a rien à payer tant qu’il n’a pas décidé de garder l’application.
             </p>
-            <ul style={{ margin: 0, paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <li>Le développeur ne fournit pas le livrable dans les délais impartis et annule le projet.</li>
-              <li>L'application testée s'avère non fonctionnelle ou en totale contradiction avec le cahier des charges, constatée par l'arbitrage technique de Recette Ops.</li>
-              <li>Accord amiable mutuel écrit entre le développeur et le client transmis au support.</li>
+            <p style={P0}>
+              Sans paiement confirmé à l’expiration, la démo et le code déposé sont supprimés : le développeur conserve son travail et le client ne reçoit rien. Aucune passation n’a lieu tant que le paiement au développeur et les frais de service ne sont pas confirmés.
+            </p>
+          </section>
+
+          <section>
+            <h2 style={H2}>Article 5 · Paiement contesté</h2>
+            <p style={P}>Si le développeur indique n’avoir rien reçu, ou ne traite pas un paiement déclaré :</p>
+            <ul style={UL}>
+              <li>un paiement déclaré et non traité <strong>expire au bout de 48 heures</strong> ;</li>
+              <li>le client peut alors ouvrir un <strong>ticket</strong> en joignant ses preuves (référence, capture du SMS de l’opérateur) ;</li>
+              <li>le développeur est relancé pour répondre ;</li>
+              <li>à défaut de réponse, l’administration de Fid’s peut <strong>confirmer le paiement</strong> à la place du développeur. Cette action est journalisée.</li>
             </ul>
-          </section>
-
-          <section>
-            <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '24px', fontWeight: 400, margin: '0 0 12px', color: 'var(--color-accent-800)' }}>
-              Article 6 · Factures & Justificatifs Comptables
-            </h2>
-            <p style={{ margin: 0 }}>
-              Chaque transaction effectuée sur Recette génère automatiquement un reçu électronique horodaté et une facture conforme (téléchargeable au format PDF dans l'espace Développeur et l'espace Client), portant mention du numéro de séquestre unique et des identifiants fiscaux.
+            <p style={{ ...P0, marginTop: '12px' }}>
+              Si Fid’s ne constate pas la réception des frais de service, la déclaration est refusée avec un motif et le client peut déclarer à nouveau, avec la bonne référence. L’administration ne manipule jamais le paiement destiné au développeur : elle ne peut ni l’encaisser, ni le reverser, ni le rembourser.
             </p>
           </section>
 
+          <section>
+            <h2 style={H2}>Article 6 · Remboursements</h2>
+            <p style={P0}>
+              Fid’s ne détenant pas le paiement destiné au développeur, elle ne peut pas le rembourser : toute restitution de cette somme se règle directement entre le client et le développeur. Les frais de service ne sont exigibles qu’au moment où l’application est remise au client. Les journaux de la livraison (déclarations, confirmations, tickets) peuvent être fournis aux parties à titre de preuve.
+            </p>
+          </section>
+
+          <section>
+            <h2 style={H2}>Article 7 · Factures</h2>
+            <p style={P0}>
+              À la passation, Fid’s émet une facture numérotée au nom du développeur (vendeur) et du client (acheteur) pour le montant de la livraison, ainsi qu’un reçu pour les frais de service perçus par Fid’s. Les deux documents sont téléchargeables en PDF dans l’espace client, la facture également dans l’espace développeur.
+            </p>
+          </section>
         </div>
 
         {/* Bloc d'action vers Inscription / Connexion */}
@@ -316,9 +300,9 @@ export default function CfPage() {
           }}
         >
           <div>
-            <h3 style={{ margin: '0 0 6px', fontSize: '18px' }}>Prêt à sécuriser vos prochains projets ?</h3>
+            <h3 style={{ margin: '0 0 6px', fontSize: '18px' }}>Prêt à livrer en confiance ?</h3>
             <p style={{ margin: 0, fontSize: '14px', color: 'var(--muted)' }}>
-              Rejoignez des centaines de freelances et d'entreprises qui livrent en toute sérénité.
+              Créez votre compte : votre client teste, vous paie directement, et l’application passe à son nom.
             </p>
           </div>
           <Link
@@ -352,7 +336,7 @@ export default function CfPage() {
         }}
       >
         <div style={{ maxWidth: '1000px', margin: '0 auto', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
-          <div>© 2026 Recette · Systalink Cloud & Séquestre</div>
+          <div>© 2026 Fid’s · Opéré par Systalink</div>
           <div style={{ display: 'flex', gap: '16px' }}>
             <Link href="/" style={{ color: 'inherit', textDecoration: 'none' }}>Accueil</Link>
             <Link href="/cgu" style={{ color: 'inherit', textDecoration: 'none' }}>CGU</Link>

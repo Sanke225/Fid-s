@@ -5,6 +5,10 @@ enum DeliveryStatus {
   building
   build_failed
   demo_ready
+  // Le client a payé le dev (dépôt confirmé) ; il doit encore régler les frais de service Fid’s (5 %).
+  // La démo reste consultable, rien n'est remis.
+  fee_pending
+  // Dev payé ET frais Fid’s confirmés : la passation peut commencer.
   paid
   handing_over
   handover_failed
@@ -64,6 +68,7 @@ model Delivery {
   builds         Build[]          @relation("DeliveryBuilds")
   spaces         Space[]
   payments       Payment[]
+  platformFees   PlatformFee[]
   tickets        Ticket[]
   handover       Handover?
   invoice        Invoice?

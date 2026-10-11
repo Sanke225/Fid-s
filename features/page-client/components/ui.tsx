@@ -1,6 +1,6 @@
 'use client'
 
-import { BRAND } from '../lib/brand'
+import { BrandLogo } from '@/components/Brand'
 import Link from 'next/link'
 import { useState, type ButtonHTMLAttributes, type ReactNode } from 'react'
 import { cx } from '../lib/cx'
@@ -11,17 +11,8 @@ import { CheckIcon, CopyIcon } from './icons'
 
 export function Logo({ tone = 'dark' }: { tone?: 'dark' | 'light' }) {
   return (
-    <span className={cx('inline-flex items-center gap-2 font-bold tracking-tight', tone === 'light' ? 'text-white' : 'text-ink')}>
-      <span
-        aria-hidden
-        className={cx(
-          'grid size-7 place-items-center rounded-lg text-sm font-extrabold',
-          tone === 'light' ? 'bg-mint text-night' : 'bg-ink text-mint',
-        )}
-      >
-        F
-      </span>
-      {BRAND}
+    <span className="inline-flex text-ink">
+      <BrandLogo height={28} tone={tone === 'light' ? 'on-dark' : 'auto'} />
     </span>
   )
 }

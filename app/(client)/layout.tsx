@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false }, // pages à lien privé : jamais indexées
 }
 
-export const viewport: Viewport = { themeColor: '#121826' }
+export const viewport: Viewport = { themeColor: '#FFF8F1' }
 
 /** Groupe des pages vues par le client (pas de compte) : page de livraison et espace client. */
 export default function ClientLayout({ children }: LayoutProps<'/'>) {

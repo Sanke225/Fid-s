@@ -1,421 +1,258 @@
 'use client';
 
-import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useRecette } from '@/lib/context';
+import { useState, type FormEvent, type ReactNode } from 'react';
+import { ArrowRightIcon, LockIcon } from '@/components/Icons';
+import { Field, FormAlert } from '@/components/auth/Field';
+import { BriefcaseIcon, MailIcon, PhoneIcon, SpinnerIcon, UserRoundIcon } from '@/components/auth/AuthIcons';
+import { Card, DevPage, PageHeader } from '@/components/dev/ui';
+import { ProviderLogo } from '@/components/payments/ProviderLogo';
 import { useToast } from '@/components/Toast';
-import { CheckIcon, LockIcon } from '@/components/Icons';
+import { errorMessage } from '@/lib/api/client';
+import { formatXof } from '@/lib/delivery-ui';
+import { FEE_RATE, computeFee } from '@/lib/payments/fee-rules';
+import { normalizePhone } from '@/lib/phone';
+import { usePayoutMethods } from '@/lib/queries/payouts';
+import { useCreateProjectWithDelivery } from '@/lib/queries/projects';
 
-export default function DevWizardPage() {
+const MIN = 100;
+const MAX = 100_000_000;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+type Errors = Partial<Record<'name' | 'clientName' | 'clientEmail' | 'clientPhone' | 'amount', string>>;
+
+/** « 350 000 » / « 350.000 » / « 350000 » → 350000 ; NaN si autre chose que des chiffres. */
+const parseAmount = (raw: string) => (raw.trim() ? Number(raw.replace(/[\s.  ]/g, '')) : NaN);
+
+export default function NewProjectPage() {
   const router = useRouter();
-  const { addProject, simulateBuildProcess } = useRecette();
   const { showToast } = useToast();
+  const create = useCreateProjectWithDelivery();
+  const { data: methods } = usePayoutMethods();
 
-  const [step, setStep] = useState(1);
-  const totalSteps = 4;
+  // Tous les champs démarrent vides : les exemples ne sont que des textes indicatifs.
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [clientName, setClientName] = useState('');
+  const [clientEmail, setClientEmail] = useState('');
+  const [clientPhone, setClientPhone] = useState('');
+  const [amountText, setAmountText] = useState('');
+  const [includeSource, setIncludeSource] = useState(true);
+  const [errors, setErrors] = useState<Errors>({});
+  const [formError, setFormError] = useState<{ message: string; projectId?: string } | null>(null);
 
-  const [formData, setFormData] = useState({
-    name: 'Boutique Wax Ivoire',
-    clientName: 'Mme Awa Koné',
-    clientEmail: 'awa@couture.ci',
-    clientPhone: '+225 07 44 33 22 11',
-    amountXof: 550000,
-    includeSource: true,
-    filename: 'wax-ivoire-v1.zip',
-    type: 'node',
-    nodeVersion: '22',
-    port: 3000,
-    installCmd: 'npm ci',
-    buildCmd: 'npm run build',
-    startCmd: 'node dist/server.js'
-  });
+  const amount = parseAmount(amountText);
+  const amountOk = Number.isInteger(amount) && amount >= MIN && amount <= MAX;
 
-  const [createdProjectId, setCreatedProjectId] = useState<string | null>(null);
-  const [buildLogs, setBuildLogs] = useState<string[]>([]);
-  const [buildProgress, setBuildProgress] = useState(0);
-  const [isBuildDone, setIsBuildDone] = useState(false);
+  const submit = (e: FormEvent) => {
+    e.preventDefault();
+    const phone = clientPhone.trim() ? normalizePhone(clientPhone) : null;
+    const errs: Errors = {};
+    if (name.trim().length < 2) errs.name = 'Donnez un nom au projet (2 caractères minimum).';
+    if (clientName.trim().length < 2) errs.clientName = 'Indiquez le nom du client.';
+    if (clientEmail.trim() && !EMAIL_RE.test(clientEmail.trim())) errs.clientEmail = 'Adresse e-mail invalide.';
+    if (clientPhone.trim() && !phone) errs.clientPhone = 'Numéro attendu au format 07 00 00 00 00 ou +225…';
+    if (!amountOk) errs.amount = `Montant en FCFA, entre ${formatXof(MIN)} et ${formatXof(MAX)}.`;
+    setErrors(errs);
+    setFormError(null);
+    if (Object.keys(errs).length) return;
 
-  const handleNext = () => {
-    if (step < 3) {
-      setStep(prev => prev + 1);
-    } else if (step === 3) {
-      // Étape 4 : Lancer la création et la simulation
-      const newProj = addProject({
-        name: formData.name,
-        clientName: formData.clientName,
-        clientEmail: formData.clientEmail,
-        clientPhone: formData.clientPhone,
-        amountXof: formData.amountXof,
-        includeSource: formData.includeSource,
-        filename: formData.filename
-      });
-
-      setCreatedProjectId(newProj.id);
-      setStep(4);
-
-      simulateBuildProcess(
-        newProj.id,
-        (current, total, line) => {
-          setBuildProgress(Math.round((current / total) * 100));
-          setBuildLogs(prev => [...prev, line]);
+    create.mutate(
+      {
+        name: name.trim(),
+        description: description.trim() || undefined,
+        amountXof: amount,
+        includeSource,
+        client: { name: clientName.trim(), email: clientEmail.trim() || undefined, phone: phone ?? undefined },
+      },
+      {
+        onSuccess: project => {
+          showToast('Projet créé', 'success');
+          router.push(`/dev/project/${project.id}`);
         },
-        () => {
-          setIsBuildDone(true);
-          showToast('Projet créé et démo installée avec succès !', 'success');
-        }
-      );
-    }
+        onError: err => setFormError({ message: errorMessage(err), projectId: (err as { projectId?: string }).projectId }),
+      },
+    );
   };
 
   return (
-    <div style={{ maxWidth: '900px', margin: '0 auto', padding: 'clamp(16px, 3vw, 36px)' }}>
-      {/* En-tête */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '28px' }}>
-        <div>
-          <span style={{ fontSize: '13px', fontWeight: 600, letterSpacing: '.05em', textTransform: 'uppercase', color: 'var(--muted)' }}>
-            Livraison de logiciel
-          </span>
-          <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 400, fontSize: 'clamp(24px, 3.5vw, 32px)', margin: '4px 0 0' }}>
-            Nouveau projet à livrer
-          </h1>
-        </div>
-        <Link href="/dev/projects" className="btn btn-secondary" style={{ padding: '8px 16px', borderRadius: '999px', fontSize: '14px', textDecoration: 'none' }}>
-          Annuler
-        </Link>
-      </div>
+    <DevPage>
+      <PageHeader eyebrow="Nouvelle livraison" title="Nouveau projet" />
 
-      {/* Stepper horizontal */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '32px', position: 'relative' }}>
-        <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '3px', background: 'var(--color-divider)', zIndex: 0, transform: 'translateY(-50%)' }} />
-        <div
-          style={{
-            position: 'absolute',
-            top: '50%',
-            left: 0,
-            width: `${((step - 1) / (totalSteps - 1)) * 100}%`,
-            height: '3px',
-            background: 'var(--grad)',
-            zIndex: 0,
-            transform: 'translateY(-50%)',
-            transition: 'width .3s ease'
-          }}
-        />
+      <form onSubmit={submit} noValidate className="grid items-start gap-6 lg:grid-cols-[1.5fr_1fr]">
+        <div className="space-y-6">
+          <FormAlert message={formError?.message ?? null} />
+          {formError?.projectId ? (
+            <p className="-mt-3 text-[14px]">
+              Le projet a bien été créé.{' '}
+              <Link href={`/dev/project/${formError.projectId}`} className="font-semibold text-f-ink-accent underline">
+                Ouvrir le projet
+              </Link>
+            </p>
+          ) : null}
 
-        {[
-          { n: 1, label: 'Infos & Montant' },
-          { n: 2, label: 'Code & Archive' },
-          { n: 3, label: 'Manifeste & Stack' },
-          { n: 4, label: 'Lancement' }
-        ].map(s => {
-          const isDone = s.n < step;
-          const isCur = s.n === step;
-          const bg = isDone ? 'var(--success)' : isCur ? 'var(--grad)' : 'var(--card)';
-          const color = isDone || isCur ? '#fff' : 'var(--muted)';
-          const border = isDone || isCur ? 'transparent' : 'var(--color-divider)';
+          <Section title="Le projet">
+            <Field
+              label="Nom du projet"
+              icon={<BriefcaseIcon size={18} />}
+              placeholder="Ex. : Caisse et gestion de stock"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              error={errors.name}
+              maxLength={100}
+              required
+            />
+            <TextArea
+              label="Description"
+              placeholder="Ce que fait l’application, en une ou deux phrases."
+              value={description}
+              onChange={setDescription}
+            />
+          </Section>
 
-          return (
-            <div key={s.n} style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
-              <span
-                style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '50%',
-                  background: bg,
-                  color,
-                  border: `2px solid ${border}`,
-                  display: 'grid',
-                  placeItems: 'center',
-                  fontWeight: 700,
-                  fontSize: '14px',
-                  boxShadow: 'var(--shadow-soft)'
-                }}
-              >
-                {isDone ? '✓' : s.n}
-              </span>
-              <span className="hidden sm:inline" style={{ fontSize: '12px', fontWeight: isCur ? 700 : 500, color: isCur ? 'var(--color-text)' : 'var(--muted)', whiteSpace: 'nowrap' }}>
-                {s.label}
-              </span>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Libellé de l'étape sur petit mobile */}
-      <div className="sm:hidden" style={{ textAlign: 'center', marginTop: '-20px', marginBottom: '20px', fontSize: '13px', fontWeight: 700, color: 'var(--color-accent)' }}>
-        Étape {step}/4 : {[
-          'Infos & Montant',
-          'Code & Archive',
-          'Manifeste & Stack',
-          'Lancement'
-        ][step - 1]}
-      </div>
-
-      {/* Contenu de chaque étape */}
-      <div style={{ padding: 'clamp(20px, 4vw, 36px)', borderRadius: '32px', background: 'var(--card)', boxShadow: 'var(--shadow-soft)', border: '1px solid var(--color-divider)', display: 'flex', flexDirection: 'column', gap: '24px' }}>
-        {step === 1 && (
-          <>
-            <div>
-              <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '22px', margin: 0 }}>
-                1. Identification du projet & Modalités
-              </h2>
-              <span style={{ fontSize: '13px', color: 'var(--muted)' }}>
-                Renseignez le logiciel à livrer et les coordonnées de votre client.
-              </span>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', gap: '16px' }}>
-              <div>
-                <label style={{ fontSize: '13px', fontWeight: 600, display: 'block', marginBottom: '6px' }}>
-                  Nom de l'application
-                </label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={e => setFormData({ ...formData, name: e.target.value })}
-                  style={{ width: '100%', padding: '12px 14px', borderRadius: '14px', border: '1px solid var(--color-divider)', background: 'var(--color-surface)', font: 'inherit', boxSizing: 'border-box' }}
-                />
-              </div>
-
-              <div>
-                <label style={{ fontSize: '13px', fontWeight: 600, display: 'block', marginBottom: '6px' }}>
-                  Solde à percevoir (FCFA)
-                </label>
-                <input
-                  type="number"
-                  value={formData.amountXof}
-                  onChange={e => setFormData({ ...formData, amountXof: Number(e.target.value) })}
-                  style={{ width: '100%', padding: '12px 14px', borderRadius: '14px', border: '1px solid var(--color-divider)', background: 'var(--color-surface)', font: 'inherit', boxSizing: 'border-box' }}
-                />
-              </div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px' }}>
-              <div>
-                <label style={{ fontSize: '13px', fontWeight: 600, display: 'block', marginBottom: '6px' }}>
-                  Nom du client
-                </label>
-                <input
-                  type="text"
-                  value={formData.clientName}
-                  onChange={e => setFormData({ ...formData, clientName: e.target.value })}
-                  style={{ width: '100%', padding: '12px 14px', borderRadius: '14px', border: '1px solid var(--color-divider)', background: 'var(--color-surface)', font: 'inherit', boxSizing: 'border-box' }}
-                />
-              </div>
-
-              <div>
-                <label style={{ fontSize: '13px', fontWeight: 600, display: 'block', marginBottom: '6px' }}>
-                  Téléphone du client (pour SMS démo)
-                </label>
-                <input
-                  type="text"
-                  value={formData.clientPhone}
-                  onChange={e => setFormData({ ...formData, clientPhone: e.target.value })}
-                  style={{ width: '100%', padding: '12px 14px', borderRadius: '14px', border: '1px solid var(--color-divider)', background: 'var(--color-surface)', font: 'inherit', boxSizing: 'border-box' }}
-                />
-              </div>
-            </div>
-
-            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '14px', padding: '12px 16px', borderRadius: '16px', background: 'var(--color-surface)', border: '1px solid var(--color-divider)' }}>
-              <input
-                type="checkbox"
-                checked={formData.includeSource}
-                onChange={e => setFormData({ ...formData, includeSource: e.target.checked })}
-                style={{ width: '18px', height: '18px', accentColor: 'var(--color-accent)' }}
+          <Section title="Le client" hint="Il recevra le lien de livraison pour tester puis payer.">
+            <Field
+              label="Nom du client"
+              icon={<UserRoundIcon size={18} />}
+              placeholder="Ex. : Mariam Traoré"
+              autoComplete="off"
+              value={clientName}
+              onChange={e => setClientName(e.target.value)}
+              error={errors.clientName}
+              maxLength={100}
+              required
+            />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field
+                label="E-mail"
+                optional
+                icon={<MailIcon size={18} />}
+                type="email"
+                inputMode="email"
+                autoComplete="off"
+                placeholder="client@exemple.ci"
+                value={clientEmail}
+                onChange={e => setClientEmail(e.target.value)}
+                error={errors.clientEmail}
               />
-              <span>Inclure le téléchargement de l'archive du code source à la passation</span>
+              <Field
+                label="Téléphone"
+                optional
+                icon={<PhoneIcon size={18} />}
+                type="tel"
+                inputMode="tel"
+                autoComplete="off"
+                placeholder="07 00 00 00 00"
+                value={clientPhone}
+                onChange={e => setClientPhone(e.target.value)}
+                error={errors.clientPhone}
+                hint={<span className="text-[12.5px] text-f-muted">Pour lui envoyer le lien par WhatsApp.</span>}
+              />
+            </div>
+          </Section>
+
+          <Section title="La livraison">
+            <Field
+              label="Montant convenu (FCFA)"
+              icon={<span aria-hidden className="text-[13px] font-bold">F</span>}
+              inputMode="numeric"
+              placeholder="Ex. : 350 000"
+              value={amountText}
+              onChange={e => setAmountText(e.target.value.replace(/[^\d\s.]/g, ''))}
+              error={errors.amount}
+              required
+            />
+            <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-f-line p-4">
+              <input type="checkbox" checked={includeSource} onChange={e => setIncludeSource(e.target.checked)} className="mt-1 size-4 accent-[#C84A00]" />
+              <span>
+                <span className="block text-[14.5px] font-semibold">Remettre le code source au client</span>
+                <span className="block text-[13px] text-f-muted">
+                  Il le reçoit à la passation, jamais avant le paiement complet.
+                </span>
+              </span>
             </label>
-          </>
-        )}
+            <p className="flex items-start gap-2 rounded-2xl bg-f-surface px-4 py-3 text-[13.5px] text-f-muted">
+              <LockIcon size={15} className="mt-0.5 shrink-0" />
+              L’envoi du code (.zip) et la mise en ligne automatique de la démo arrivent bientôt : la livraison est créée « en attente du code ».
+            </p>
+          </Section>
+        </div>
 
-        {step === 2 && (
-          <>
-            <div>
-              <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '22px', margin: 0 }}>
-                2. Dépôt de l'archive de code (.zip)
-              </h2>
-              <span style={{ fontSize: '13px', color: 'var(--muted)' }}>
-                Votre archive est chiffrée en AES-256-GCM dès la réception et ne sera débloquée qu'après paiement.
-              </span>
-            </div>
-
-            <div
-              style={{
-                border: '2px dashed var(--color-accent)',
-                borderRadius: '24px',
-                padding: '40px 20px',
-                textAlign: 'center',
-                background: 'var(--color-accent-100)',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '12px'
-              }}
-            >
-              <span style={{ fontSize: '40px' }}>📦</span>
-              <strong style={{ fontSize: '16px' }}>Archive sélectionnée : {formData.filename}</strong>
-              <span style={{ fontSize: '13px', color: 'var(--muted)' }}>
-                Taille : 18.4 Mo · SHA256 validé · Chiffrement activé
-              </span>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: 'var(--success)' }}>
-              <LockIcon size={18} />
-              <span>Garantie de non-divulgation : le code en clair n'est jamais accessible au client avant le paiement.</span>
-            </div>
-          </>
-        )}
-
-        {step === 3 && (
-          <>
-            <div>
-              <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '22px', margin: 0 }}>
-                3. Manifeste d'exécution (recette.json)
-              </h2>
-              <span style={{ fontSize: '13px', color: 'var(--muted)' }}>
-                Paramètres de démarrage de l'application dans le conteneur isolé.
-              </span>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', gap: '16px' }}>
-              <div>
-                <label style={{ fontSize: '13px', fontWeight: 600, display: 'block', marginBottom: '6px' }}>
-                  Version Node.js
-                </label>
-                <select
-                  value={formData.nodeVersion}
-                  onChange={e => setFormData({ ...formData, nodeVersion: e.target.value })}
-                  style={{ width: '100%', padding: '12px 14px', borderRadius: '14px', border: '1px solid var(--color-divider)', background: 'var(--color-surface)', font: 'inherit', boxSizing: 'border-box' }}
-                >
-                  <option value="22">Node.js 22 LTS</option>
-                  <option value="24">Node.js 24 Current</option>
-                </select>
-              </div>
-
-              <div>
-                <label style={{ fontSize: '13px', fontWeight: 600, display: 'block', marginBottom: '6px' }}>
-                  Port HTTP d'écoute
-                </label>
-                <input
-                  type="number"
-                  value={formData.port}
-                  onChange={e => setFormData({ ...formData, port: Number(e.target.value) })}
-                  style={{ width: '100%', padding: '12px 14px', borderRadius: '14px', border: '1px solid var(--color-divider)', background: 'var(--color-surface)', font: 'inherit', boxSizing: 'border-box' }}
-                />
-              </div>
-            </div>
-
-            <div>
-              <label style={{ fontSize: '13px', fontWeight: 600, display: 'block', marginBottom: '6px' }}>
-                Commande d'installation
-              </label>
-              <input
-                type="text"
-                value={formData.installCmd}
-                onChange={e => setFormData({ ...formData, installCmd: e.target.value })}
-                style={{ width: '100%', padding: '12px 14px', borderRadius: '14px', border: '1px solid var(--color-divider)', background: 'var(--color-surface)', font: 'inherit', boxSizing: 'border-box' }}
-              />
-            </div>
-
-            <div>
-              <label style={{ fontSize: '13px', fontWeight: 600, display: 'block', marginBottom: '6px' }}>
-                Commande de démarrage (start)
-              </label>
-              <input
-                type="text"
-                value={formData.startCmd}
-                onChange={e => setFormData({ ...formData, startCmd: e.target.value })}
-                style={{ width: '100%', padding: '12px 14px', borderRadius: '14px', border: '1px solid var(--color-divider)', background: 'var(--color-surface)', font: 'inherit', boxSizing: 'border-box' }}
-              />
-            </div>
-          </>
-        )}
-
-        {step === 4 && (
-          <>
-            <div>
-              <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '22px', margin: 0 }}>
-                {isBuildDone ? 'Démo en ligne prête !' : 'Installation en cours dans le conteneur...'}
-              </h2>
-              <span style={{ fontSize: '13px', color: 'var(--muted)' }}>
-                {isBuildDone
-                  ? 'Le conteneur est provisionné et la démo est prête à être testée par votre client.'
-                  : 'Veuillez patienter pendant l’exécution des commandes du conteneur sécurisé.'}
-              </span>
-            </div>
-
-            <div style={{ width: '100%', height: '8px', borderRadius: '999px', background: 'var(--color-neutral-300)', overflow: 'hidden' }}>
-              <div style={{ width: `${buildProgress}%`, height: '100%', background: 'var(--grad)', transition: 'width .3s' }} />
-            </div>
-
-            {/* Terminal de streaming */}
-            <div
-              style={{
-                background: '#0B0B0F',
-                color: '#A9C4F5',
-                padding: '16px',
-                borderRadius: '18px',
-                fontFamily: 'var(--mono)',
-                fontSize: '12px',
-                height: '200px',
-                overflowY: 'auto',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '4px'
-              }}
-            >
-              {buildLogs.map((log, idx) => (
-                <div key={idx} style={{ opacity: idx === buildLogs.length - 1 ? 1 : 0.8 }}>
-                  &gt; {log}
-                </div>
-              ))}
-            </div>
-
-            {isBuildDone && createdProjectId && (
-              <div style={{ display: 'flex', gap: '12px', marginTop: '10px' }}>
-                <button
-                  onClick={() => router.push(`/dev/project/${createdProjectId}`)}
-                  className="btn btn-primary"
-                  style={{
-                    flex: 1,
-                    padding: '14px',
-                    borderRadius: '999px',
-                    fontSize: '15px',
-                    fontWeight: 700
-                  }}
-                >
-                  Accéder à la fiche de suivi du projet →
-                </button>
-              </div>
-            )}
-          </>
-        )}
-
-        {/* Boutons Suivant / Précédent */}
-        {step < 4 && (
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px', borderTop: '1px solid var(--color-divider)', paddingTop: '20px' }}>
-            {step > 1 ? (
-              <button
-                type="button"
-                onClick={() => setStep(prev => prev - 1)}
-                className="btn btn-secondary"
-                style={{ padding: '10px 20px', borderRadius: '999px' }}
-              >
-                ← Précédent
-              </button>
-            ) : <div />}
-
-            <button
-              type="button"
-              onClick={handleNext}
-              className="btn btn-primary"
-              style={{ padding: '12px 28px', borderRadius: '999px', fontSize: '15px', fontWeight: 700 }}
-            >
-              {step === 3 ? 'Lancer l’installation →' : 'Continuer →'}
+        <div className="space-y-4 lg:sticky lg:top-24">
+          <Card className="p-6">
+            <h2 className="heading-sans text-[16px]">Récapitulatif</h2>
+            <dl className="mt-4 space-y-3 text-[14.5px]">
+              <Line label="Vous recevez (100 %)" value={amountOk ? formatXof(amount) : '—'} strong />
+              <Line label={`Frais Fid’s, payés par le client (${FEE_RATE * 100} %)`} value={amountOk ? formatXof(computeFee(amount)) : '—'} />
+              <div className="h-px bg-f-line" />
+              <Line label="Le client paie au total" value={amountOk ? formatXof(amount + computeFee(amount)) : '—'} />
+            </dl>
+            <button type="submit" disabled={create.isPending} className="cta-primary group mt-6 h-[52px] w-full rounded-2xl text-[15.5px]">
+              {create.isPending ? (
+                <>
+                  <SpinnerIcon /> Création…
+                </>
+              ) : (
+                <>
+                  Créer le projet
+                  <ArrowRightIcon size={18} className="transition-transform duration-300 group-hover:translate-x-1" />
+                </>
+              )}
             </button>
-          </div>
-        )}
+          </Card>
+
+          {methods && methods.length === 0 ? (
+            <Card className="border-[var(--warning)] bg-[var(--warning-100)] p-5">
+              <p className="text-[14px] font-semibold text-[var(--warning-800)]">Aucun moyen de paiement enregistré</p>
+              <p className="mt-1 text-[13.5px] text-[var(--warning-800)]">Votre client ne pourra pas vous payer tant que vous n’en avez pas ajouté un.</p>
+              <Link href="/dev/payouts" className="mt-3 inline-flex items-center gap-2 text-[14px] font-semibold text-[var(--warning-800)] underline">
+                <ProviderLogo provider="wave" size={20} className="rounded-md" /> Ajouter un moyen de paiement
+              </Link>
+            </Card>
+          ) : null}
+        </div>
+      </form>
+    </DevPage>
+  );
+}
+
+function Section({ title, hint, children }: { title: string; hint?: string; children: ReactNode }) {
+  return (
+    <Card className="space-y-4 p-6">
+      <div>
+        <h2 className="heading-sans text-[17px]">{title}</h2>
+        {hint ? <p className="mt-0.5 text-[13.5px] text-f-muted">{hint}</p> : null}
       </div>
+      {children}
+    </Card>
+  );
+}
+
+function Line({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
+  return (
+    <div className="flex items-baseline justify-between gap-4">
+      <dt className="text-f-muted">{label}</dt>
+      <dd className={`whitespace-nowrap tabular-nums ${strong ? 'text-[17px] font-bold text-f-success-ink' : 'font-semibold'}`}>{value}</dd>
     </div>
+  );
+}
+
+function TextArea({ label, placeholder, value, onChange }: { label: string; placeholder: string; value: string; onChange: (v: string) => void }) {
+  return (
+    <label className="block">
+      <span className="mb-1.5 flex items-baseline justify-between text-[13.5px] font-semibold">
+        {label}
+        <span className="text-[12px] font-normal text-f-muted">Facultatif</span>
+      </span>
+      <textarea
+        rows={3}
+        maxLength={1000}
+        placeholder={placeholder}
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        className="w-full resize-y rounded-2xl border border-f-line bg-f-card px-4 py-3 text-[15px] outline-none transition-[border-color,box-shadow] placeholder:text-f-muted/70 focus:border-[var(--color-accent)] focus:shadow-[0_0_0_4px_color-mix(in_srgb,var(--color-accent)_18%,transparent)]"
+      />
+    </label>
   );
 }

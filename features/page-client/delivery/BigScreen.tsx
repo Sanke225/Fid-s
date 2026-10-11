@@ -18,7 +18,8 @@ export function BigScreen({ token, delivery }: { token: string; delivery: Public
   const pageUrl = `${window.location.origin}/l/${token}`
   const unlocked = ['paid', 'handing_over', 'delivered'].includes(delivery.status)
   const delivered = delivery.status === 'delivered'
-  const pending = delivery.activePayment?.status === 'initiated'
+  // Paiement déclaré (en attente du dev) ou dépôt confirmé avec frais Fid’s en cours.
+  const pending = delivery.activePayment?.status === 'declared' || delivery.status === 'awaiting_fee'
 
   return (
     <div className="flex min-h-dvh flex-col bg-night text-white">
@@ -49,7 +50,7 @@ export function BigScreen({ token, delivery }: { token: string; delivery: Public
               </span>
             ) : pending ? (
               <span className="inline-flex items-center gap-3 rounded-full bg-white/10 px-6 py-3 text-xl font-semibold">
-                <Spinner className="size-5" /> Paiement en cours…
+                <Spinner className="size-5" /> {delivery.status === 'awaiting_fee' ? 'Paiement reçu, finalisation…' : 'Paiement en cours…'}
               </span>
             ) : (
               <span className="inline-flex items-center gap-3 rounded-full bg-white/10 px-6 py-3 text-xl font-semibold text-white/80">

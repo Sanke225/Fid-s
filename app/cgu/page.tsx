@@ -2,12 +2,12 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { useRecette } from '@/lib/context';
-import { ArrowLeftIcon, LogoIcon, MoonIcon, ShieldIcon, SunIcon } from '@/components/Icons';
+import { useTheme } from '@/lib/theme';
+import { BrandLogo } from '@/components/Brand';
+import { ArrowLeftIcon, MoonIcon, ShieldIcon, SunIcon } from '@/components/Icons';
 
 export default function CguPage() {
-  const { state, setTheme } = useRecette();
-  const isDark = state.theme === 'dark';
+  const { isDark, setTheme } = useTheme();
 
   return (
     <div
@@ -55,21 +55,7 @@ export default function CguPage() {
                 color: 'var(--color-text)'
               }}
             >
-              <span
-                style={{
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '50%',
-                  background: 'var(--grad)',
-                  display: 'grid',
-                  placeItems: 'center',
-                  color: '#fff',
-                  boxShadow: '0 2px 8px rgba(255,106,0,.3)'
-                }}
-              >
-                <LogoIcon size={16} color="#fff" />
-              </span>
-              <span style={{ fontFamily: 'var(--font-heading)', fontSize: '20px' }}>Recette</span>
+              <BrandLogo height={30} />
             </Link>
           </div>
 
@@ -163,7 +149,7 @@ export default function CguPage() {
             Conditions Générales d'Utilisation (CGU)
           </h1>
           <p style={{ fontSize: '16px', color: 'var(--muted)', margin: 0 }}>
-            Dernière mise à jour : 8 octobre 2026 · Plateforme opérée par Systalink Côte d’Ivoire
+            Dernière mise à jour : 11 octobre 2026 · Plateforme opérée par Systalink Côte d’Ivoire
           </p>
         </div>
 
@@ -182,7 +168,7 @@ export default function CguPage() {
           <strong style={{ display: 'block', marginBottom: '6px', color: 'var(--color-accent-900)' }}>
             💡 En résumé :
           </strong>
-          Recette protège les créateurs de logiciels et leurs clients. Le développeur ne transmet pas son code source avant d'être payé, et le client ne paie pas avant d'avoir testé son application sur notre conteneur sécurisé.
+          Fid’s protège les créateurs de logiciels et leurs clients. Le développeur ne transmet pas son code source avant d'être payé, et le client ne paie pas avant d'avoir testé son application sur notre conteneur sécurisé.
         </div>
 
         {/* Articles des CGU */}
@@ -193,10 +179,10 @@ export default function CguPage() {
               Article 1 · Objet du service
             </h2>
             <p style={{ margin: '0 0 12px' }}>
-              La plateforme <strong>Recette</strong> est un tiers de confiance technique et financier destiné à sécuriser la livraison de solutions logicielles sur mesure (applications web, mobiles, scripts, APIs) développées pour le compte de clients finaux en Afrique de l’Ouest et à l’international.
+              La plateforme <strong>Fid’s</strong> est un tiers de confiance technique destiné à sécuriser la livraison de solutions logicielles sur mesure (applications web, mobiles, scripts, APIs) développées pour le compte de clients finaux en Afrique de l’Ouest et à l’international.
             </p>
             <p style={{ margin: 0 }}>
-              Recette assure l'hébergement temporaire et étanche des démonstrations pré-livraison, la mise sous séquestre des fonds convenus, ainsi que la passation automatisée et irrévocable du code source et des noms de domaine dès validation du règlement.
+              Fid’s assure l'hébergement temporaire et étanche des démonstrations avant livraison, puis la passation de l’application au client (accès, base de données et, si prévu, code source) dès que le paiement au développeur et les frais de service de Fid’s ont été confirmés. Fid’s ne détient jamais le paiement destiné au développeur : le client paie le développeur directement, et règle à Fid’s des frais de service de 5 % (0 % pour le développeur ; voir les Conditions Financières).
             </p>
           </section>
 
@@ -204,10 +190,10 @@ export default function CguPage() {
             <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '24px', fontWeight: 400, margin: '0 0 12px', color: 'var(--color-accent-800)' }}>
               Article 2 · Définitions
             </h2>
-            <ul style={{ margin: 0, paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <li><strong>Développeur (Prestataire) :</strong> tout développeur freelance, agence ou studio logiciel créant un projet et déposant son archive technique sur Recette.</li>
+            <ul style={{ margin: 0, paddingLeft: '22px', listStyle: 'disc', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <li><strong>Développeur (Prestataire) :</strong> tout développeur freelance, agence ou studio logiciel créant un projet et déposant son archive technique sur Fid’s.</li>
               <li><strong>Client :</strong> toute personne physique ou morale commanditaire du logiciel, invitée à tester l'application et à en régler le montant.</li>
-              <li><strong>Démo Recette :</strong> environnement éphémère et cloisonné (conteneur Docker isolé) exécutant l'application pour permettre l'essai fonctionnel sans accès direct au code source.</li>
+              <li><strong>Démo Fid’s :</strong> environnement éphémère et cloisonné (conteneur Docker isolé) exécutant l'application pour permettre l'essai fonctionnel sans accès direct au code source.</li>
               <li><strong>Passation (Handover) :</strong> processus technique automatisé transférant l'archive du code source, les variables d'environnement et la redirection DNS vers les accès du client dès confirmation du paiement.</li>
             </ul>
           </section>
@@ -217,10 +203,10 @@ export default function CguPage() {
               Article 3 · Création de compte et Vérification
             </h2>
             <p style={{ margin: '0 0 12px' }}>
-              L'accès aux fonctionnalités de livraison et de retrait financier nécessite la création d'un compte validé par numéro de téléphone mobile (vérification SMS à usage unique OTP).
+              L'accès à l’espace développeur ou à l’espace client nécessite la création d'un compte, par adresse e-mail et mot de passe ou par un fournisseur de connexion (Google, GitHub). À l’inscription, l’utilisateur choisit son type de compte : développeur ou client. Un client peut aussi recevoir sa livraison sans compte, par le lien privé qui lui est transmis.
             </p>
             <p style={{ margin: 0 }}>
-              Chaque utilisateur s’engage à fournir des informations véridiques, notamment son identifiant Mobile Money (Wave Côte d’Ivoire, Orange Money, MTN MoMo ou Moov Money) sous peine d'annulation du virement.
+              Chaque utilisateur s’engage à fournir des informations véridiques. Le développeur enregistre lui-même les numéros Mobile Money (Wave, Orange Money, Moov Money ou MTN MoMo) sur lesquels ses clients le paient ; il est seul responsable de leur exactitude.
             </p>
           </section>
 
@@ -229,10 +215,10 @@ export default function CguPage() {
               Article 4 · Propriété Intellectuelle et Cession des Droits
             </h2>
             <p style={{ margin: '0 0 12px' }}>
-              <strong>Conservation préalable :</strong> Le développeur demeure le propriétaire exclusif de l'intégralité du code source, de la logique logicielle et des éléments graphiques jusqu’à la confirmation définitive du paiement par les services de Recette.
+              <strong>Conservation préalable :</strong> Le développeur demeure le propriétaire exclusif de l'intégralité du code source, de la logique logicielle et des éléments graphiques jusqu’à la confirmation définitive du paiement par les services de Fid’s.
             </p>
             <p style={{ margin: 0 }}>
-              <strong>Cession immédiate et automatique :</strong> Dès confirmation du paiement intégral par séquestre Mobile Money ou carte bancaire, la cession des droits patrimoniaux sur le code source est opérée automatiquement au profit du client, conformément au bon de commande initial.
+              <strong>Cession immédiate et automatique :</strong> Dès que le développeur a confirmé avoir reçu le paiement intégral (ou, en cas de paiement contesté, dès que l’administration l’a confirmé selon les Conditions Financières) et que Fid’s a confirmé la réception des frais de service, la cession des droits patrimoniaux sur le code source est opérée au profit du client, conformément à l’accord initial entre les parties.
             </p>
           </section>
 
@@ -241,7 +227,7 @@ export default function CguPage() {
               Article 5 · Engagements et Intégrité du Code
             </h2>
             <p style={{ margin: '0 0 12px' }}>
-              Il est strictement interdit de déposer sur Recette du code comportant des portes dérobées (backdoors), des logiciels malveillants, des composants de minage ou tout élément attentatoire à la sécurité du client final ou de l’infrastructure cloud de Recette.
+              Il est strictement interdit de déposer sur Fid’s du code comportant des portes dérobées (backdoors), des logiciels malveillants, des composants de minage ou tout élément attentatoire à la sécurité du client final ou de l’infrastructure cloud de Fid’s.
             </p>
             <p style={{ margin: 0 }}>
               Tout manquement entraîne la suspension immédiate du compte et le signalement aux autorités compétentes.
@@ -253,10 +239,10 @@ export default function CguPage() {
               Article 6 · Résolution des Litiges & Arbitrage
             </h2>
             <p style={{ margin: '0 0 12px' }}>
-              En cas de divergence substantielle entre le cahier des charges et la démo livrée, le client dispose d’un délai de <strong>72 heures</strong> à compter de la mise à disposition de la démo pour ouvrir un ticket de médiation auprès de Systalink Recette Ops.
+              Le client teste l’application <strong>avant</strong> de payer : si la démo ne correspond pas à ce qui était convenu, il ne paie pas et la démo expire, sans engagement. Les désaccords sur un paiement (par exemple, un développeur qui indique n’avoir rien reçu) se traitent par <strong>ticket</strong>, selon la procédure décrite à l’article 5 des Conditions Financières.
             </p>
             <p style={{ margin: 0 }}>
-              Les logs d'exécution du conteneur et les rapports de build certifiés par Recette font foi entre les parties pour déterminer la conformité technique du livrable.
+              Le journal de la livraison tenu par Fid’s (déclarations de paiement, confirmations, tickets, décisions de l’administration) peut être produit entre les parties à titre de preuve.
             </p>
           </section>
 
@@ -290,7 +276,7 @@ export default function CguPage() {
           <div>
             <h3 style={{ margin: '0 0 6px', fontSize: '18px' }}>Consulter les Conditions Financières</h3>
             <p style={{ margin: 0, fontSize: '14px', color: 'var(--muted)' }}>
-              Découvrez les détails du séquestre, délais de reversement et 0% de commission.
+              0 % pour le développeur, 5 % de frais pour le client, déblocage de la livraison et factures.
             </p>
           </div>
           <div style={{ display: 'flex', gap: '10px' }}>
@@ -327,7 +313,7 @@ export default function CguPage() {
         }}
       >
         <div style={{ maxWidth: '1000px', margin: '0 auto', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
-          <div>© 2026 Recette · Opéré par Systalink Cloud</div>
+          <div>© 2026 Fid’s · Opéré par Systalink</div>
           <div style={{ display: 'flex', gap: '16px' }}>
             <Link href="/" style={{ color: 'inherit', textDecoration: 'none' }}>Accueil</Link>
             <Link href="/cgu" style={{ color: 'var(--color-accent-700)', textDecoration: 'none', fontWeight: 600 }}>CGU</Link>

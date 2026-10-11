@@ -1,13 +1,16 @@
 import type {
   ApiErrorBody,
   ClientSpace,
-  CreatePaymentInput,
-  CreatePaymentResult,
+  DeclareFeeInput,
+  DeclarePaymentInput,
+  DeclarePaymentResult,
   Payment,
+  PlatformFee,
   PublicDelivery,
+  Ticket,
 } from './contracts'
 
-/** Erreur d'API au format 6.1 : le `code` fait partie du contrat, le `message` est affichable. */
+/** Erreur d'API : le `code` fait partie du contrat, le `message` (en français) est affichable. */
 export class ApiError extends Error {
   readonly status: number
   readonly code: string
@@ -22,15 +25,21 @@ export class ApiError extends Error {
   }
 }
 
-/** Les seuls appels publics (sans compte) dont la page client a besoin — section 6.2, lots 1 et 3. */
+/** Les appels publics (sans compte) de la page client. Le jeton payeur prouve que cet appareil a payé. */
 export interface PublicApi {
   /** GET /public/deliveries/:token */
   getDelivery(token: string, payerToken?: string | null): Promise<PublicDelivery>
-  /** POST /public/deliveries/:token/payments */
-  createPayment(token: string, input: CreatePaymentInput): Promise<CreatePaymentResult>
+  /** POST /public/deliveries/:token/payments — le client déclare avoir payé le dev. */
+  declarePayment(token: string, input: DeclarePaymentInput): Promise<DeclarePaymentResult>
   /** GET /public/payments/:paymentId */
   getPayment(paymentId: string, payerToken: string): Promise<Payment>
-  /** GET /public/client-space/:accessToken */
+  /** GET /public/payments/:paymentId/tickets */
+  getTickets(paymentId: string, payerToken: string): Promise<Ticket[]>
+  /** POST /public/payments/:paymentId/tickets — contestation après « rien reçu » ou 48 h sans réponse. */
+  openTicket(paymentId: string, payerToken: string, claim: string): Promise<Ticket>
+  /** POST /public/deliveries/:token/fee — le client déclare avoir réglé les frais Fid’s (5 %). */
+  declareFee(token: string, payerToken: string | null, input: DeclareFeeInput): Promise<PlatformFee>
+  /** GET /public/client-space/:accessToken (disponible avec la passation). */
   getClientSpace(accessToken: string): Promise<ClientSpace>
 }
 
@@ -58,15 +67,19 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
 }
 
 const enc = encodeURIComponent
+const payer = (payerToken: string) => ({ 'X-Payer-Token': payerToken })
 
 export const httpApi: PublicApi = {
   getDelivery: (token, payerToken) =>
-    request(`/public/deliveries/${enc(token)}`, {
-      headers: payerToken ? { 'X-Payer-Token': payerToken } : {},
-    }),
-  createPayment: (token, input) =>
+    request(`/public/deliveries/${enc(token)}`, { headers: payerToken ? payer(payerToken) : {} }),
+  declarePayment: (token, input) =>
     request(`/public/deliveries/${enc(token)}/payments`, { method: 'POST', body: JSON.stringify(input) }),
-  getPayment: (paymentId, payerToken) =>
-    request(`/public/payments/${enc(paymentId)}`, { headers: { 'X-Payer-Token': payerToken } }),
+  getPayment: (paymentId, payerToken) => request(`/public/payments/${enc(paymentId)}`, { headers: payer(payerToken) }),
+  getTickets: (paymentId, payerToken) =>
+    request<{ items: Ticket[] }>(`/public/payments/${enc(paymentId)}/tickets`, { headers: payer(payerToken) }).then((r) => r.items),
+  openTicket: (paymentId, payerToken, claim) =>
+    request(`/public/payments/${enc(paymentId)}/tickets`, { method: 'POST', headers: payer(payerToken), body: JSON.stringify({ claim }) }),
+  declareFee: (token, payerToken, input) =>
+    request(`/public/deliveries/${enc(token)}/fee`, { method: 'POST', headers: payerToken ? payer(payerToken) : {}, body: JSON.stringify(input) }),
   getClientSpace: (accessToken) => request(`/public/client-space/${enc(accessToken)}`),
 }

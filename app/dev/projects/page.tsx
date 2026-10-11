@@ -1,227 +1,138 @@
 'use client';
 
-import React, { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useRecette } from '@/lib/context';
-import { ChevronRightIcon, PlusIcon, SearchIcon } from '@/components/Icons';
-import { ProjectStatus } from '@/lib/types';
+import { useMemo, useState } from 'react';
+import { ChevronRightIcon, SearchIcon } from '@/components/Icons';
+import { Card, DevPage, EmptyState, ErrorState, PageHeader, Skeleton, StatusBadge } from '@/components/dev/ui';
+import { errorMessage } from '@/lib/api/client';
+import { STATUS_GROUPS, formatXof, latestDelivery, timeAgo } from '@/lib/delivery-ui';
+import { useProjects } from '@/lib/queries/projects';
 
-export default function DevProjectsPage() {
-  const router = useRouter();
-  const { state } = useRecette();
-  const [filter, setFilter] = useState<string>('all');
-  const [searchQuery, setSearchQuery] = useState('');
+type GroupId = (typeof STATUS_GROUPS)[number]['id'];
 
-  const STATUS_CONFIG: Record<ProjectStatus, { label: string; bg: string; color: string; dot: string }> = {
-    draft: { label: 'Brouillon', bg: 'var(--color-neutral-300)', color: 'var(--color-neutral-800)', dot: '#999' },
-    building: { label: 'En installation', bg: 'var(--info-100)', color: 'var(--info-800)', dot: 'var(--info)' },
-    demo_ready: { label: 'Démo active', bg: 'var(--color-accent-100)', color: 'var(--color-accent-800)', dot: 'var(--color-accent)' },
-    paid: { label: 'Payé', bg: 'var(--warning-100)', color: 'var(--warning-800)', dot: 'var(--warning)' },
-    handing_over: { label: 'En passation', bg: 'var(--color-accent-100)', color: 'var(--color-accent-800)', dot: 'var(--color-accent)' },
-    handover_failed: { label: 'Passation bloquée', bg: 'var(--danger-100)', color: 'var(--danger-800)', dot: 'var(--danger)' },
-    delivered: { label: 'Livré', bg: 'var(--success-100)', color: 'var(--success-800)', dot: 'var(--success)' },
-    expired: { label: 'Expiré', bg: 'var(--color-neutral-300)', color: 'var(--color-neutral-700)', dot: '#777' },
-    cancelled: { label: 'Annulé', bg: 'var(--danger-100)', color: 'var(--danger-800)', dot: 'var(--danger)' }
-  };
+export default function ProjectsPage() {
+  const { data: projects, isPending, error, refetch } = useProjects();
+  const [group, setGroup] = useState<GroupId>('all');
+  const [query, setQuery] = useState('');
 
-  let list = state.projects;
+  const counts = useMemo(() => {
+    const c = Object.fromEntries(STATUS_GROUPS.map(g => [g.id, 0])) as Record<GroupId, number>;
+    for (const p of projects ?? []) {
+      const status = latestDelivery(p)?.status;
+      c.all++;
+      for (const g of STATUS_GROUPS) {
+        if (g.statuses && status && (g.statuses as readonly string[]).includes(status)) c[g.id]++;
+      }
+    }
+    return c;
+  }, [projects]);
 
-  if (filter !== 'all') {
-    list = list.filter(p => p.status === filter);
-  }
-
-  if (searchQuery.trim()) {
-    const q = searchQuery.toLowerCase();
-    list = list.filter(
-      p => p.name.toLowerCase().includes(q) || p.client.name.toLowerCase().includes(q)
-    );
-  }
+  const visible = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const statuses = STATUS_GROUPS.find(g => g.id === group)?.statuses as readonly string[] | null;
+    return (projects ?? []).filter(p => {
+      const d = latestDelivery(p);
+      if (statuses && (!d || !statuses.includes(d.status))) return false;
+      if (!q) return true;
+      return p.name.toLowerCase().includes(q) || (d?.client.name.toLowerCase().includes(q) ?? false);
+    });
+  }, [projects, group, query]);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', padding: 'clamp(16px, 2.5vw, 32px)', maxWidth: '1380px', margin: '0 auto' }}>
-      {/* En-tête */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '16px' }}>
-        <div>
-          <span style={{ fontSize: '13px', fontWeight: 600, letterSpacing: '.05em', textTransform: 'uppercase', color: 'var(--muted)' }}>
-            Gestion des livraisons
-          </span>
-          <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 400, fontSize: 'clamp(28px, 3vw, 38px)', margin: '4px 0 0' }}>
-            Mes projets ({list.length})
-          </h1>
-        </div>
+    <DevPage>
+      <PageHeader
+        eyebrow="Gestion des livraisons"
+        title={`Mes projets${projects ? ` (${projects.length})` : ''}`}
+      />
 
-        <Link
-          href="/dev/new"
-          className="btn btn-primary"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '12px 22px',
-            borderRadius: '999px',
-            background: 'var(--grad)',
-            color: '#fff',
-            border: 0,
-            fontSize: '15px',
-            fontWeight: 700,
-            cursor: 'pointer',
-            boxShadow: '0 6px 18px rgba(255,106,0,.35)',
-            textDecoration: 'none'
-          }}
-        >
-          <PlusIcon size={18} color="#fff" /> Nouveau projet
-        </Link>
-      </div>
-
-      {/* Barre de recherche et filtres */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ position: 'relative', flex: 1, minWidth: 'min(100%, 260px)', maxWidth: '440px' }}>
-          <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)' }}>
-            <SearchIcon size={18} />
-          </span>
-          <input
-            type="text"
-            placeholder="Rechercher par projet ou client..."
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '12px 14px 12px 42px',
-              borderRadius: '999px',
-              border: '1px solid var(--color-divider)',
-              background: 'var(--card)',
-              color: 'var(--color-text)',
-              font: 'inherit',
-              fontSize: '14px',
-              boxSizing: 'border-box'
-            }}
-          />
-        </div>
-
-        {/* Pilules de statut */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-          {[
-            { id: 'all', label: 'Tous' },
-            { id: 'demo_ready', label: 'Démos en ligne' },
-            { id: 'building', label: 'En installation' },
-            { id: 'delivered', label: 'Livrés' },
-            { id: 'handover_failed', label: 'Bloqués' }
-          ].map(f => {
-            const isCur = filter === f.id;
-            return (
+      {projects && projects.length > 0 ? (
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+          <label className="relative w-full max-w-md">
+            <span className="sr-only">Rechercher un projet ou un client</span>
+            <SearchIcon size={17} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-f-muted" />
+            <input
+              type="search"
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              placeholder="Rechercher par projet ou client…"
+              className="h-12 w-full rounded-full border border-f-line bg-f-card pl-11 pr-4 text-[15px] outline-none transition-[border-color,box-shadow] focus:border-[var(--color-accent)] focus:shadow-[0_0_0_4px_color-mix(in_srgb,var(--color-accent)_18%,transparent)]"
+            />
+          </label>
+          <div role="group" aria-label="Filtrer par statut" className="flex flex-wrap gap-2">
+            {STATUS_GROUPS.filter(g => g.id === 'all' || counts[g.id] > 0).map(g => (
               <button
-                key={f.id}
-                onClick={() => setFilter(f.id)}
-                style={{
-                  padding: '6px 14px',
-                  borderRadius: '999px',
-                  border: isCur ? '0' : '1px solid var(--color-divider)',
-                  background: isCur ? 'var(--grad)' : 'var(--card)',
-                  color: isCur ? '#fff' : 'var(--color-text)',
-                  fontSize: '13px',
-                  fontWeight: isCur ? 700 : 500,
-                  cursor: 'pointer'
-                }}
+                key={g.id}
+                type="button"
+                aria-pressed={group === g.id}
+                onClick={() => setGroup(g.id)}
+                className={`rounded-full border px-3.5 py-2 text-[13.5px] font-semibold transition-colors ${
+                  group === g.id ? 'border-transparent bg-[#C84A00] text-white' : 'border-f-line bg-f-card hover:bg-f-surface'
+                }`}
               >
-                {f.label}
+                {g.label} <span className="opacity-70">{counts[g.id]}</span>
               </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Grille des cartes projets */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 300px), 1fr))', gap: '20px' }}>
-        {list.length === 0 ? (
-          <div style={{ gridColumn: '1 / -1', padding: '60px 20px', textAlign: 'center', background: 'var(--card)', borderRadius: '28px', border: '1px solid var(--color-divider)', color: 'var(--muted)' }}>
-            Aucun projet ne correspond aux critères de recherche.
+            ))}
           </div>
-        ) : (
-          list.map(p => {
-            const st = STATUS_CONFIG[p.status] || STATUS_CONFIG.draft;
+        </div>
+      ) : null}
+
+      {isPending ? (
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          {[0, 1, 2].map(i => (
+            <Skeleton key={i} className="h-44" />
+          ))}
+        </div>
+      ) : error ? (
+        <ErrorState message={errorMessage(error)} onRetry={() => refetch()} />
+      ) : projects.length === 0 ? (
+        <EmptyState
+          title="Aucun projet pour l’instant"
+          text="Créez votre premier projet : votre client testera l’application sur une démo, puis vous paiera directement par Mobile Money."
+          action={{ href: '/dev/new', label: 'Créer un projet' }}
+        />
+      ) : visible.length === 0 ? (
+        <Card className="p-10 text-center text-[15px] text-f-muted">Aucun projet ne correspond à ces critères.</Card>
+      ) : (
+        <ul className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          {visible.map(p => {
+            const d = latestDelivery(p);
             return (
-              <div
-                key={p.id}
-                onClick={() => router.push(`/dev/project/${p.id}`)}
-                style={{
-                  padding: '24px',
-                  borderRadius: '28px',
-                  background: 'var(--card)',
-                  boxShadow: 'var(--shadow-soft)',
-                  border: '1px solid var(--color-divider)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '16px',
-                  cursor: 'pointer',
-                  transition: 'transform .2s ease'
-                }}
-                onMouseEnter={e => {
-                  (e.currentTarget as HTMLElement).style.transform = 'translateY(-3px)';
-                }}
-                onMouseLeave={e => {
-                  (e.currentTarget as HTMLElement).style.transform = 'none';
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span
-                      style={{
-                        width: '36px',
-                        height: '36px',
-                        borderRadius: '12px',
-                        background: 'var(--grad)',
-                        color: '#fff',
-                        display: 'grid',
-                        placeItems: 'center',
-                        fontWeight: 700,
-                        fontFamily: 'var(--font-heading)',
-                        fontSize: '15px'
-                      }}
-                    >
-                      {p.name.charAt(0)}
+              <li key={p.id}>
+                <Link
+                  href={`/dev/project/${p.id}`}
+                  className="group flex h-full flex-col rounded-[24px] border border-f-line bg-f-card p-5 shadow-f-soft transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-f-float"
+                >
+                  <div className="flex items-start gap-3">
+                    <span aria-hidden className="grid size-11 shrink-0 place-items-center rounded-2xl bg-[linear-gradient(120deg,#A63E00,#FF6A00)] font-display text-[17px] text-white">
+                      {p.name.charAt(0).toUpperCase()}
                     </span>
-                    <div>
-                      <strong style={{ fontSize: '16px', display: 'block' }}>{p.name}</strong>
-                      <span style={{ fontSize: '13px', color: 'var(--muted)' }}>Client : {p.client.name}</span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[16px] font-bold" title={p.name}>{p.name}</p>
+                      <p className="truncate text-[13.5px] text-f-muted">{d ? `Client : ${d.client.name}` : 'Aucune livraison'}</p>
+                      {d ? <div className="mt-2"><StatusBadge status={d.status} /></div> : null}
                     </div>
                   </div>
-
-                  <span
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '5px',
-                      padding: '3px 10px',
-                      borderRadius: '999px',
-                      background: st.bg,
-                      color: st.color,
-                      fontSize: '11px',
-                      fontWeight: 700
-                    }}
-                  >
-                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: st.dot }} />
-                    {st.label}
-                  </span>
-                </div>
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 'auto', paddingTop: '10px', borderTop: '1px solid var(--color-divider)' }}>
-                  <div>
-                    <span style={{ fontSize: '11px', color: 'var(--muted)', display: 'block' }}>Solde convenu</span>
-                    <strong style={{ fontSize: '18px', color: 'var(--color-accent-800)' }}>
-                      {(p.amountXof || 0).toLocaleString('fr-FR')} FCFA
-                    </strong>
+                  {d?.pendingPaymentId ? (
+                    <p className="mt-4 rounded-xl bg-[var(--warning-100)] px-3 py-2 text-[13px] font-semibold text-[var(--warning-800)]">
+                      Paiement déclaré : à confirmer
+                    </p>
+                  ) : null}
+                  <div className="mt-auto flex items-end justify-between gap-3 border-t border-f-line pt-4">
+                    <div>
+                      <p className="text-[12px] text-f-muted">Solde convenu</p>
+                      <p className="text-[19px] font-bold text-f-ink-accent">{d ? formatXof(d.amountXof) : '—'}</p>
+                    </div>
+                    <span className="flex items-center gap-1 text-[13px] font-semibold text-f-muted group-hover:text-f-text">
+                      {timeAgo(p.updatedAt)}
+                      <ChevronRightIcon size={15} />
+                    </span>
                   </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px', color: 'var(--color-accent)', fontWeight: 600 }}>
-                    Suivi <ChevronRightIcon size={16} />
-                  </div>
-                </div>
-              </div>
+                </Link>
+              </li>
             );
-          })
-        )}
-      </div>
-    </div>
+          })}
+        </ul>
+      )}
+    </DevPage>
   );
 }

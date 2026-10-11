@@ -136,3 +136,45 @@ export const AdminTicketDetail = z.object({
   }),
 });
 export type AdminTicketDetail = z.infer<typeof AdminTicketDetail>;
+
+// Frais de service Fid’s (5 % payés par le client, 0 % pour le dev).
+export const PlatformFeeStatus = z.enum(["declared", "confirmed", "rejected", "expired"]);
+export type PlatformFeeStatus = z.infer<typeof PlatformFeeStatus>;
+
+export const PlatformFee = z.object({
+  id: Id,
+  deliveryId: Id,
+  provider: PaymentProvider,
+  payeePhone: z.string(),
+  amountXof: AmountXof,
+  status: PlatformFeeStatus,
+  payerName: z.string(),
+  payerPhone: z.string(),
+  transactionRef: z.string(),
+  rejectionReason: z.string().nullable(),
+  declaredAt: IsoDate,
+  decidedAt: IsoDate.nullable(),
+  expiresAt: IsoDate,
+});
+export type PlatformFee = z.infer<typeof PlatformFee>;
+
+// POST /api/v1/public/deliveries/:token/fee — en-tête X-Payer-Token obligatoire (l'appareil qui a payé le dev).
+export const DeclareFeeInput = z.object({
+  provider: PaymentProvider,
+  payerName: z.string().trim().min(2).max(100),
+  payerPhone: Phone,
+  transactionRef: z.string().trim().min(4).max(64),
+});
+export type DeclareFeeInput = z.infer<typeof DeclareFeeInput>;
+
+// Vue admin : GET /api/v1/admin/fees?status=declared
+export const AdminFee = PlatformFee.extend({
+  projectName: z.string(),
+  clientName: z.string(),
+  deliveryAmountXof: AmountXof,
+});
+export type AdminFee = z.infer<typeof AdminFee>;
+
+// POST /api/v1/admin/fees/:id/reject
+export const RejectFeeInput = z.object({ reason: z.string().trim().min(5).max(500) });
+export type RejectFeeInput = z.infer<typeof RejectFeeInput>;

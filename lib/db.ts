@@ -7,7 +7,9 @@ const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
 function createPrismaClient() {
   const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
-  return new PrismaClient({ adapter });
+  // Transactions interactives : 15 s au lieu de 5 s par défaut. En développement, une compilation à chaud
+  // peut suspendre une requête plusieurs secondes ; en production, cela absorbe un pic de charge.
+  return new PrismaClient({ adapter, transactionOptions: { timeout: 15_000, maxWait: 5_000 } });
 }
 
 export const prisma = globalForPrisma.prisma ?? createPrismaClient();

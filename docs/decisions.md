@@ -2,6 +2,13 @@
 
 Une entrée par décision : date, décision, raison. Les plus récentes en haut.
 
+## 2026-10-11
+
+- **Frais de service** : 0 % pour le développeur, **5 % payés par le client** (100 FCFA minimum, arrondis au franc supérieur), au moment de recevoir l'application. Remplace les « 3 % » de la landing et les « 0 % de commission » des anciennes CF. Raison : le dev choisit l'outil (adoption), le client paie pour ce qui le protège.
+- **Déblocage en deux temps** : le dev confirme le dépôt → la livraison passe en `fee_pending` (la démo reste consultable, rien n'est remis) → le client paie les 5 % sur un numéro de Fid's et déclare la référence → un administrateur confirme (`fee.confirmed`) → `paid`, puis passation. Seul l'appareil qui a payé le dev peut déclarer les frais (`X-Payer-Token`).
+- **Argent** : Fid's ne détient toujours jamais le paiement destiné au dev. Elle encaisse seulement ses propres frais, sur ses numéros (`FIDS_PAYOUT_*`).
+- **Un seul backend** : `/api/v1` + Postgres. Les faux backends (état simulé du front, `lib/fixtures`, faux backend de la page client) sont supprimés au fur et à mesure.
+
 ## 2026-10-06
 
 - **Cadre** : Next.js (App Router) pour le front et l'API, au lieu de React + Vite + Fastify (D3, D4). Raison : déjà en place, équipe à l'aise. Un processus `worker` séparé reste nécessaire pour les tâches longues.

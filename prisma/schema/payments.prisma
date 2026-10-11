@@ -115,3 +115,43 @@ model Ticket {
   @@index([status])
   @@map("tickets")
 }
+
+// Frais de service Fid’s : 5 % du montant de la livraison, payés par le client (0 % pour le dev).
+// Le client les paie sur un numéro de Fid’s et déclare la référence ; un administrateur confirme la réception.
+// Seule cette confirmation fait passer la livraison de fee_pending à paid (puis à la passation).
+enum PlatformFeeStatus {
+  declared
+  confirmed
+  rejected
+  expired
+
+  @@map("platform_fee_status")
+}
+
+model PlatformFee {
+  id              String            @id @default(uuid())
+  deliveryId      String            @map("delivery_id")
+  delivery        Delivery          @relation(fields: [deliveryId], references: [id], onDelete: Restrict)
+  provider        PaymentProvider
+  // Numéro de Fid’s au moment de la déclaration (configuration FIDS_PAYOUT_*).
+  payeePhone      String            @map("payee_phone")
+  // Calculé côté serveur depuis le montant de la livraison, jamais envoyé par le client.
+  amountXof       Int               @map("amount_xof")
+  status          PlatformFeeStatus @default(declared)
+  payerName       String            @map("payer_name")
+  payerPhone      String            @map("payer_phone")
+  transactionRef  String            @map("transaction_ref")
+  decidedById     String?           @map("decided_by_id")
+  decidedBy       User?             @relation("PlatformFeeDecidedBy", fields: [decidedById], references: [id], onDelete: SetNull)
+  rejectionReason String?           @map("rejection_reason")
+  declaredAt      DateTime          @default(now()) @map("declared_at") @db.Timestamptz
+  decidedAt       DateTime?         @map("decided_at") @db.Timestamptz
+  expiresAt       DateTime          @map("expires_at") @db.Timestamptz
+  // Un seul paiement de frais confirmé par livraison (même principe que payments.confirmed_for).
+  confirmedFor    String?           @unique @map("confirmed_for")
+
+  @@unique([provider, transactionRef])
+  @@index([deliveryId, status])
+  @@index([status])
+  @@map("platform_fees")
+}

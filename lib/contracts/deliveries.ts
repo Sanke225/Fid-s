@@ -7,6 +7,8 @@ export const DeliveryStatus = z.enum([
   "building",
   "build_failed",
   "demo_ready",
+  // Le dev a confirmé le dépôt ; le client doit encore régler les frais de service Fid’s.
+  "fee_pending",
   "paid",
   "handing_over",
   "handover_failed",
@@ -20,6 +22,8 @@ export type DeliveryStatus = z.infer<typeof DeliveryStatus>;
 export const PublicDeliveryStatus = z.enum([
   "preparing",
   "demo_ready",
+  // Paiement au dev confirmé : reste à régler les frais de service Fid’s pour recevoir l'application.
+  "awaiting_fee",
   "paid",
   "handing_over",
   "delivered",
@@ -35,6 +39,8 @@ export function toPublicStatus(status: DeliveryStatus): PublicDeliveryStatus {
       return "preparing";
     case "handover_failed":
       return "handing_over";
+    case "fee_pending":
+      return "awaiting_fee";
     case "expired":
     case "cancelled":
       return "unavailable";
@@ -78,6 +84,9 @@ export const Delivery = z.object({
   failure: z.object({ code: z.string(), message: z.string() }).nullable(),
   // Paiement déclaré par le client et en attente de la confirmation du dev.
   pendingPaymentId: Id.nullable(),
+  // Frais de service Fid’s payés par le client (0 % pour le dev). Montant toujours connu ;
+  // statut nul tant que le dev n'a pas confirmé le dépôt.
+  fee: z.object({ amountXof: AmountXof, status: z.enum(["due", "declared", "confirmed"]).nullable() }),
   expiresAt: IsoDate.nullable(),
   paidAt: IsoDate.nullable(),
   deliveredAt: IsoDate.nullable(),
@@ -114,6 +123,13 @@ export const PublicDelivery = z.object({
   activePayment: z.object({ id: Id, status: PaymentStatus }).nullable(),
   // Lien vers l'espace client, seulement avec le bon X-Payer-Token, une fois livré.
   clientSpaceUrl: z.url().nullable(),
+  // Frais de service Fid’s (5 % du montant, payés par le client). Numéros et frais en cours : visibles
+  // seulement pour l'appareil qui a payé le dev (X-Payer-Token), une fois le dépôt confirmé.
+  fee: z.object({
+    amountXof: AmountXof,
+    payoutMethods: z.array(z.object({ provider: PaymentProvider, phone: z.string(), label: z.string() })),
+    activeFee: z.object({ id: Id, status: z.enum(["declared", "confirmed", "rejected", "expired"]) }).nullable(),
+  }),
   expiresAt: IsoDate.nullable(),
 });
 export type PublicDelivery = z.infer<typeof PublicDelivery>;

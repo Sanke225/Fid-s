@@ -1,3 +1,4 @@
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { payerTokenFrom } from "@/lib/payments/payer-token";
 import { HttpError, handle } from "@/lib/api/http";
@@ -20,5 +21,20 @@ export const GET = handle<Context>(async (request, { params }) => {
       })
     : null;
 
-  return Response.json(toPublicDeliveryDto(delivery, payerPayment));
+  // Le client connecté et propriétaire de la livraison a les mêmes droits que l'appareil qui a payé
+  // (frais Fid’s, espace client), depuis n'importe quel appareil.
+  const session = await auth.api.getSession({ headers: request.headers });
+  const isOwner = session?.user.role === "client" && delivery.clientUserId === session.user.id;
+
+  // Frais Fid’s : seulement pour l'appareil dont le paiement au dev a été confirmé, ou le propriétaire.
+  const payerFee =
+    payerPayment?.status === "confirmed" || isOwner
+      ? await prisma.platformFee.findFirst({
+          where: { deliveryId: delivery.id },
+          orderBy: { declaredAt: "desc" },
+          select: { id: true, status: true },
+        })
+      : null;
+
+  return Response.json(toPublicDeliveryDto(delivery, payerPayment, payerFee, isOwner));
 });

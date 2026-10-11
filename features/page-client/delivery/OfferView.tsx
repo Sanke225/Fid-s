@@ -9,22 +9,14 @@ import { daysUntil, formatDay, formatXof } from '../lib/format'
 import { PaymentPanel } from '../pay/PaymentPanel'
 
 /** État « démo en ligne » : essayer, voir le montant, payer. */
-export function OfferView({
-  token,
-  delivery,
-  returning,
-}: {
-  token: string
-  delivery: PublicDelivery
-  returning: boolean
-}) {
+export function OfferView({ token, delivery }: { token: string; delivery: PublicDelivery }) {
   const daysLeft = delivery.expiresAt ? daysUntil(delivery.expiresAt) : null
 
   return (
     <PhoneShell
       footer={
         <>
-          {BRAND} ne touche jamais votre argent : il va directement à {delivery.devName}.
+          {BRAND} ne touche jamais le paiement destiné à {delivery.devName} : il va directement sur son numéro.
           <br />
           <Link href={`/l/${token}?ecran=grand`} className="mt-3 inline-flex items-center gap-1.5 underline-offset-2 hover:underline">
             <ScreenIcon className="size-3.5" /> Mode grand écran
@@ -62,11 +54,15 @@ export function OfferView({
           <h2 className="font-semibold">Réglez quand ça vous convient</h2>
         </div>
         <div className="mt-4 flex items-end justify-between gap-3 border-t border-dashed border-line pt-4">
-          <span className="text-sm text-ink-soft">Montant à régler</span>
+          <span className="text-sm text-ink-soft">À régler à {delivery.devName}</span>
           <span className="text-[28px] leading-none font-extrabold tracking-tight tabular">
             {formatXof(delivery.amountXof)}
           </span>
         </div>
+        <p className="mt-2 flex items-start justify-between gap-3 text-sm text-ink-soft">
+          <span>Puis, pour recevoir l’application : frais de service {BRAND} (5 %)</span>
+          <span className="shrink-0 font-semibold tabular">{formatXof(delivery.fee.amountXof)}</span>
+        </p>
         {daysLeft !== null && delivery.expiresAt && (
           <p className="mt-2 text-right text-xs text-ink-mute">
             Démo disponible jusqu’au {formatDay(delivery.expiresAt)}
@@ -76,11 +72,12 @@ export function OfferView({
       </Card>
 
       <div className="animate-rise [animation-delay:180ms]">
-        <PaymentPanel token={token} delivery={delivery} returning={returning} />
+        <PaymentPanel token={token} delivery={delivery} />
       </div>
 
       <ul className="animate-rise mt-1 flex flex-col gap-2.5 text-sm text-ink-soft [animation-delay:240ms]">
-        <Assurance>Dès le paiement confirmé, l’application est installée à votre nom, à votre adresse.</Assurance>
+        <Assurance>Vous ne payez que si la démo vous convient. Rien n’est remis avant le paiement complet.</Assurance>
+        <Assurance>Paiement et frais confirmés : l’application est installée à votre nom, à votre adresse.</Assurance>
         <Assurance>Vous recevez vos accès, votre facture et une sauvegarde de vos données.</Assurance>
       </ul>
     </PhoneShell>

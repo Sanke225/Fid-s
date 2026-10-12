@@ -15,7 +15,7 @@ export default function AdminUsersPage() {
   const [query, setQuery] = useState('');
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return (data ?? []).filter(u => !q || u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q));
+    return (data ?? []).filter(u => !q || u.name.toLowerCase().includes(q) || (u.email ?? '').toLowerCase().includes(q));
   }, [data, query]);
 
   return (
@@ -54,7 +54,7 @@ export default function AdminUsersPage() {
                   <td className="px-5 py-3">
                     <span className="font-semibold">{u.name}</span>
                     {u.businessName ? <span className="text-f-muted"> · {u.businessName}</span> : null}
-                    <span className="block text-[12.5px] text-f-muted">{u.email}</span>
+                    <span className="block text-[12.5px] text-f-muted">{u.deletedAt ? `Supprimé le ${formatDate(u.deletedAt)}` : (u.email ?? 'Sans e-mail')}</span>
                   </td>
                   <td className="px-3 py-3">
                     <span className={`rounded-full px-2.5 py-1 text-[12px] font-semibold ${TONE_CLASS[u.role === 'admin' ? 'danger' : u.role === 'dev' ? 'accent' : u.role === 'client' ? 'info' : 'neutral']}`}>

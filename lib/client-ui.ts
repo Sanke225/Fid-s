@@ -26,6 +26,11 @@ export function clientBadge(d: ClientDelivery): { label: string; tone: Tone } {
   if (d.ticketOpen) return { label: 'Ticket en cours', tone: 'danger' };
   if (d.paymentPending) return { label: 'Paiement en vérification', tone: 'info' };
   if (d.status === 'awaiting_fee' && d.fee.status === 'declared') return { label: 'Frais en vérification', tone: 'info' };
+  // Avant « Terminé » : on montre où en est le développement, comme chez le dev.
+  if (d.status === 'preparing') {
+    if (d.projectStatus === 'assigned') return { label: 'Projet assigné', tone: 'info' };
+    if (d.projectStatus === 'in_progress') return { label: 'En développement', tone: 'warning' };
+  }
   const ui = CLIENT_STATUS_UI[d.status];
   return { label: ui.label, tone: ui.tone };
 }

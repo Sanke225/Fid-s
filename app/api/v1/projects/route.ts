@@ -1,7 +1,7 @@
 import { CreateProjectInput } from "@/lib/contracts";
 import { prisma } from "@/lib/db";
 import { handle, parseJson } from "@/lib/api/http";
-import { deliveryInclude, toDeliveryDto, toProjectDto } from "@/lib/api/serializers";
+import { deliveryInclude, projectClientSelect, toDeliveryDto, toProjectDto } from "@/lib/api/serializers";
 import { requireRole } from "@/lib/api/session";
 
 // GET /api/v1/projects — les projets du dev connecté uniquement, chacun avec ses livraisons
@@ -12,7 +12,7 @@ export const GET = handle(async (request) => {
     where: { ownerId: dev.id },
     orderBy: { updatedAt: "desc" },
     take: 100,
-    include: { deliveries: { include: deliveryInclude, orderBy: { createdAt: "desc" } } },
+    include: { ...projectClientSelect, deliveries: { include: deliveryInclude, orderBy: { createdAt: "desc" } } },
   });
   return Response.json({
     items: projects.map((project) => ({ ...toProjectDto(project), deliveries: project.deliveries.map(toDeliveryDto) })),
@@ -25,6 +25,7 @@ export const POST = handle(async (request) => {
   const input = await parseJson(request, CreateProjectInput);
   const project = await prisma.project.create({
     data: { ownerId: dev.id, name: input.name, description: input.description ?? null },
+    include: projectClientSelect,
   });
   return Response.json(toProjectDto(project), { status: 201 });
 });

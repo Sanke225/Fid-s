@@ -48,6 +48,8 @@ export const TRANSITIONS = {
     }),
   },
   "space.ready": { from: ["building"], to: "demo_ready" },
+  // « Réinitialiser la démo » (dev ou client) : même version, base remise à zéro par le worker.
+  "demo.reset_requested": { from: ["demo_ready"], to: "building" },
   // Le dev (ou l'admin après un ticket) confirme avoir reçu l'argent. La démo reste consultable,
   // mais rien n'est remis tant que le client n'a pas réglé les frais de service Fid’s.
   "payment.confirmed": { from: ["demo_ready"], to: "fee_pending", effects: (_, now) => ({ paidAt: now }) },

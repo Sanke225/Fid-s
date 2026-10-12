@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { AmountXof, Id, IsoDate } from "./common";
-import { PublicDeliveryStatus } from "./deliveries";
+import { ProjectStatus, PublicDeliveryStatus } from "./deliveries";
 import { PaymentProvider, PaymentStatus, PlatformFeeStatus } from "./payments";
 
 // Espace client connecté (rôle client). Le client voit ses livraisons comme sur la page publique :
@@ -8,7 +8,10 @@ import { PaymentProvider, PaymentStatus, PlatformFeeStatus } from "./payments";
 
 export const ClientDelivery = z.object({
   id: Id,
+  projectId: Id,
   projectName: z.string(),
+  // Où en est le développement (assigné, en cours, terminé).
+  projectStatus: ProjectStatus,
   devName: z.string(),
   status: PublicDeliveryStatus,
   amountXof: AmountXof,

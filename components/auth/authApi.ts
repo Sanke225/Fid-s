@@ -10,6 +10,8 @@ export { homeFor } from './paths';
 /** Messages en français pour les codes renvoyés par Better Auth ou par /api/v1. */
 const MESSAGES: Record<string, string> = {
   INVALID_EMAIL_OR_PASSWORD: 'E-mail ou mot de passe incorrect.',
+  INVALID_USERNAME_OR_PASSWORD: 'Identifiant ou mot de passe incorrect.',
+  PASSWORD_CHANGE_REQUIRED: 'Choisissez votre mot de passe pour continuer.',
   USER_ALREADY_EXISTS: 'Un compte existe déjà avec cette adresse e-mail.',
   USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL: 'Un compte existe déjà avec cette adresse e-mail.',
   INVALID_EMAIL: 'Adresse e-mail invalide.',
@@ -30,8 +32,11 @@ export function authErrorMessage(error: { code?: string; message?: string; statu
 
 export const fetchMe = () => apiFetch<{ user: ApiUser }>('/me').then(r => r.user);
 
-export const chooseRole = (role: AccountRole) =>
-  apiFetch<{ user: ApiUser }>('/me/role', { method: 'POST', body: { role } }).then(r => r.user);
+export const chooseRole = (role: AccountRole, acceptTerms?: boolean) =>
+  apiFetch<{ user: ApiUser }>('/me/role', { method: 'POST', body: { role, acceptTerms } }).then(r => r.user);
+
+export const changePassword = (input: { currentPassword: string; newPassword: string }) =>
+  apiFetch<{ user: ApiUser }>('/me/password', { method: 'POST', body: input }).then(r => r.user);
 
 export const updateMe = (input: { phone?: string; businessName?: string }) =>
   apiFetch<{ user: ApiUser }>('/me', { method: 'PATCH', body: input }).then(r => r.user);

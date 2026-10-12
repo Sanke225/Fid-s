@@ -1,5 +1,5 @@
 // Libellés et couleurs des statuts de livraison, communs aux écrans dev.
-import type { DeliveryStatus, ProjectWithDeliveries, Ticket } from '@/lib/contracts';
+import type { DeliveryStatus, ProjectStatus, ProjectWithDeliveries, Ticket } from '@/lib/contracts';
 
 export type Tone = 'neutral' | 'info' | 'accent' | 'success' | 'warning' | 'danger';
 
@@ -20,6 +20,16 @@ export const STATUS_UI: Record<DeliveryStatus, { label: string; tone: Tone; hint
   expired: { label: 'Expirée', tone: 'neutral', hint: 'Délai dépassé sans paiement.' },
   cancelled: { label: 'Annulée', tone: 'neutral', hint: 'Livraison annulée.' },
 };
+
+/** Étapes du projet, communes au dev et au client. */
+export const PROJECT_STATUS_UI: Record<ProjectStatus, { label: string; tone: Tone }> = {
+  unassigned: { label: 'Non assigné', tone: 'neutral' },
+  assigned: { label: 'Assigné', tone: 'info' },
+  in_progress: { label: 'En développement', tone: 'warning' },
+  finished: { label: 'Terminé', tone: 'success' },
+};
+
+export const PROJECT_STEPS: readonly ProjectStatus[] = ['unassigned', 'assigned', 'in_progress', 'finished'];
 
 /** Classes Tailwind par tonalité (jetons de globals.css, lisibles en clair et en sombre). */
 export const TONE_CLASS: Record<Tone, string> = {
@@ -73,6 +83,9 @@ export const formatDate = (iso: string) =>
 
 /** Libellés lisibles du journal d'événements (types émis par lib/core et lib/payments). */
 export const EVENT_LABEL: Record<string, string> = {
+  'project.assigned': 'Client assigné au projet',
+  'project.started': 'Début du développement',
+  'project.finished': 'Projet terminé : démo visible par le client',
   'delivery.created': 'Livraison créée',
   'delivery.updated': 'Livraison modifiée',
   'delivery.cancelled': 'Livraison annulée',
@@ -81,6 +94,7 @@ export const EVENT_LABEL: Record<string, string> = {
   'source.submitted': 'Code source envoyé',
   'build.failed': 'Installation échouée',
   'space.ready': 'Démo en ligne',
+  'demo.reset_requested': 'Démo réinitialisée',
   'space.failed': 'Démo indisponible',
   'payment.declared': 'Le client a déclaré un paiement',
   'payment.confirmed': 'Dépôt confirmé',

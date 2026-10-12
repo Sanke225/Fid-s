@@ -3,73 +3,59 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, type FormEvent, type ReactNode } from 'react';
-import { ArrowRightIcon, LockIcon } from '@/components/Icons';
+import { ArrowRightIcon } from '@/components/Icons';
 import { Field, FormAlert } from '@/components/auth/Field';
-import { BriefcaseIcon, MailIcon, PhoneIcon, SpinnerIcon, UserRoundIcon } from '@/components/auth/AuthIcons';
+import { BriefcaseIcon, SpinnerIcon } from '@/components/auth/AuthIcons';
 import { Card, DevPage, PageHeader } from '@/components/dev/ui';
+import { ClientFields, CredentialsModal, EMPTY_CLIENT_FORM, parseAmount, toAssignInput, type ClientFormValues } from '@/components/dev/ProjectLifecycle';
 import { ProviderLogo } from '@/components/payments/ProviderLogo';
 import { useToast } from '@/components/Toast';
 import { errorMessage } from '@/lib/api/client';
+import type { AssignClientResult, LinkGithubInput } from '@/lib/contracts';
+import { GithubPicker, GithubReturnNotice } from '@/components/dev/GithubPicker';
 import { formatXof } from '@/lib/delivery-ui';
 import { FEE_RATE, computeFee } from '@/lib/payments/fee-rules';
-import { normalizePhone } from '@/lib/phone';
 import { usePayoutMethods } from '@/lib/queries/payouts';
-import { useCreateProjectWithDelivery } from '@/lib/queries/projects';
-
-const MIN = 100;
-const MAX = 100_000_000;
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-type Errors = Partial<Record<'name' | 'clientName' | 'clientEmail' | 'clientPhone' | 'amount', string>>;
-
-/** « 350 000 » / « 350.000 » / « 350000 » → 350000 ; NaN si autre chose que des chiffres. */
-const parseAmount = (raw: string) => (raw.trim() ? Number(raw.replace(/[\s.  ]/g, '')) : NaN);
+import { useCreateProject } from '@/lib/queries/projects';
 
 export default function NewProjectPage() {
   const router = useRouter();
   const { showToast } = useToast();
-  const create = useCreateProjectWithDelivery();
+  const create = useCreateProject();
   const { data: methods } = usePayoutMethods();
 
   // Tous les champs démarrent vides : les exemples ne sont que des textes indicatifs.
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [clientName, setClientName] = useState('');
-  const [clientEmail, setClientEmail] = useState('');
-  const [clientPhone, setClientPhone] = useState('');
-  const [amountText, setAmountText] = useState('');
-  const [includeSource, setIncludeSource] = useState(true);
-  const [errors, setErrors] = useState<Errors>({});
+  // Sans client, le projet est créé « non assigné » : on l'assignera depuis sa page.
+  const [assignNow, setAssignNow] = useState(false);
+  const [github, setGithub] = useState<LinkGithubInput | null>(null);
+  const [client, setClient] = useState<ClientFormValues>(EMPTY_CLIENT_FORM);
+  const [errors, setErrors] = useState<ReturnType<typeof toAssignInput>['errors'] & { name?: string }>({});
   const [formError, setFormError] = useState<{ message: string; projectId?: string } | null>(null);
+  const [created, setCreated] = useState<{ projectId: string; credentials: AssignClientResult['credentials'] } | null>(null);
 
-  const amount = parseAmount(amountText);
-  const amountOk = Number.isInteger(amount) && amount >= MIN && amount <= MAX;
+  const amount = parseAmount(client.amountText);
+  const amountOk = assignNow && Number.isInteger(amount) && amount >= 100;
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
-    const phone = clientPhone.trim() ? normalizePhone(clientPhone) : null;
-    const errs: Errors = {};
+    const errs: typeof errors = {};
     if (name.trim().length < 2) errs.name = 'Donnez un nom au projet (2 caractères minimum).';
-    if (clientName.trim().length < 2) errs.clientName = 'Indiquez le nom du client.';
-    if (clientEmail.trim() && !EMAIL_RE.test(clientEmail.trim())) errs.clientEmail = 'Adresse e-mail invalide.';
-    if (clientPhone.trim() && !phone) errs.clientPhone = 'Numéro attendu au format 07 00 00 00 00 ou +225…';
-    if (!amountOk) errs.amount = `Montant en FCFA, entre ${formatXof(MIN)} et ${formatXof(MAX)}.`;
+    const assign = assignNow ? toAssignInput(client) : null;
+    Object.assign(errs, assign?.errors);
     setErrors(errs);
     setFormError(null);
     if (Object.keys(errs).length) return;
 
     create.mutate(
+      { name: name.trim(), description: description.trim() || undefined, assign: assign?.input ?? undefined, github: github ?? undefined },
       {
-        name: name.trim(),
-        description: description.trim() || undefined,
-        amountXof: amount,
-        includeSource,
-        client: { name: clientName.trim(), email: clientEmail.trim() || undefined, phone: phone ?? undefined },
-      },
-      {
-        onSuccess: project => {
+        onSuccess: ({ project, credentials }) => {
           showToast('Projet créé', 'success');
-          router.push(`/dev/project/${project.id}`);
+          // Identifiants provisoires : à montrer avant de quitter la page, ils ne seront plus affichés.
+          if (credentials) setCreated({ projectId: project.id, credentials });
+          else router.push(`/dev/project/${project.id}`);
         },
         onError: err => setFormError({ message: errorMessage(err), projectId: (err as { projectId?: string }).projectId }),
       },
@@ -78,14 +64,15 @@ export default function NewProjectPage() {
 
   return (
     <DevPage>
-      <PageHeader eyebrow="Nouvelle livraison" title="Nouveau projet" />
+      <GithubReturnNotice />
+      <PageHeader eyebrow="Nouveau projet" title="Nouveau projet" />
 
       <form onSubmit={submit} noValidate className="grid items-start gap-6 lg:grid-cols-[1.5fr_1fr]">
         <div className="space-y-6">
           <FormAlert message={formError?.message ?? null} />
           {formError?.projectId ? (
             <p className="-mt-3 text-[14px]">
-              Le projet a bien été créé.{' '}
+              Le projet a bien été créé, mais une étape a échoué.{' '}
               <Link href={`/dev/project/${formError.projectId}`} className="font-semibold text-f-ink-accent underline">
                 Ouvrir le projet
               </Link>
@@ -111,71 +98,19 @@ export default function NewProjectPage() {
             />
           </Section>
 
-          <Section title="Le client" hint="Il recevra le lien de livraison pour tester puis payer.">
-            <Field
-              label="Nom du client"
-              icon={<UserRoundIcon size={18} />}
-              placeholder="Ex. : Mariam Traoré"
-              autoComplete="off"
-              value={clientName}
-              onChange={e => setClientName(e.target.value)}
-              error={errors.clientName}
-              maxLength={100}
-              required
-            />
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field
-                label="E-mail"
-                optional
-                icon={<MailIcon size={18} />}
-                type="email"
-                inputMode="email"
-                autoComplete="off"
-                placeholder="client@exemple.ci"
-                value={clientEmail}
-                onChange={e => setClientEmail(e.target.value)}
-                error={errors.clientEmail}
-              />
-              <Field
-                label="Téléphone"
-                optional
-                icon={<PhoneIcon size={18} />}
-                type="tel"
-                inputMode="tel"
-                autoComplete="off"
-                placeholder="07 00 00 00 00"
-                value={clientPhone}
-                onChange={e => setClientPhone(e.target.value)}
-                error={errors.clientPhone}
-                hint={<span className="text-[12.5px] text-f-muted">Pour lui envoyer le lien par WhatsApp.</span>}
-              />
-            </div>
+          <Section title="Le code" hint="Facultatif : reliez un dépôt GitHub pour importer vos commits. Vous pouvez aussi envoyer un .zip plus tard.">
+            <GithubPicker value={github} onChange={setGithub} />
           </Section>
 
-          <Section title="La livraison">
-            <Field
-              label="Montant convenu (FCFA)"
-              icon={<span aria-hidden className="text-[13px] font-bold">F</span>}
-              inputMode="numeric"
-              placeholder="Ex. : 350 000"
-              value={amountText}
-              onChange={e => setAmountText(e.target.value.replace(/[^\d\s.]/g, ''))}
-              error={errors.amount}
-              required
-            />
+          <Section title="Le client" hint="Facultatif : vous pourrez l’assigner plus tard depuis la page du projet.">
             <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-f-line p-4">
-              <input type="checkbox" checked={includeSource} onChange={e => setIncludeSource(e.target.checked)} className="mt-1 size-4 accent-[#C84A00]" />
+              <input type="checkbox" checked={assignNow} onChange={e => setAssignNow(e.target.checked)} className="mt-1 size-4 accent-[#C84A00]" />
               <span>
-                <span className="block text-[14.5px] font-semibold">Remettre le code source au client</span>
-                <span className="block text-[13px] text-f-muted">
-                  Il le reçoit à la passation, jamais avant le paiement complet.
-                </span>
+                <span className="block text-[14.5px] font-semibold">Assigner un client maintenant</span>
+                <span className="block text-[13px] text-f-muted">Sinon, le projet est créé « non assigné ».</span>
               </span>
             </label>
-            <p className="flex items-start gap-2 rounded-2xl bg-f-surface px-4 py-3 text-[13.5px] text-f-muted">
-              <LockIcon size={15} className="mt-0.5 shrink-0" />
-              L’envoi du code (.zip) et la mise en ligne automatique de la démo arrivent bientôt : la livraison est créée « en attente du code ».
-            </p>
+            {assignNow ? <ClientFields values={client} onChange={setClient} errors={errors} /> : null}
           </Section>
         </div>
 
@@ -213,6 +148,11 @@ export default function NewProjectPage() {
           ) : null}
         </div>
       </form>
+
+      <CredentialsModal
+        credentials={created?.credentials ?? null}
+        onClose={() => created && router.push(`/dev/project/${created.projectId}`)}
+      />
     </DevPage>
   );
 }

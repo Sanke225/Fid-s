@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import { handle, notFound } from "@/lib/api/http";
-import { deliveryInclude, toDeliveryDto, toProjectDto } from "@/lib/api/serializers";
+import { deliveryInclude, projectClientSelect, toDeliveryDto, toProjectDto } from "@/lib/api/serializers";
 import { requireRole } from "@/lib/api/session";
 
 type Context = { params: Promise<{ projectId: string }> };
@@ -13,7 +13,7 @@ export const GET = handle<Context>(async (request, { params }) => {
   // ownerId dans le filtre : le projet d'un autre dev répond 404, comme s'il n'existait pas.
   const project = await prisma.project.findFirst({
     where: { id: projectId, ownerId: dev.id },
-    include: { deliveries: { include: deliveryInclude, orderBy: { createdAt: "desc" } } },
+    include: { ...projectClientSelect, deliveries: { include: deliveryInclude, orderBy: { createdAt: "desc" } } },
   });
   if (!project) throw notFound("Projet introuvable.");
 

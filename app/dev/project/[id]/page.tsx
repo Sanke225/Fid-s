@@ -8,6 +8,10 @@ import { useToast } from '@/components/Toast';
 import { Card, DevPage, ErrorState, PageHeader, Skeleton, StatusBadge } from '@/components/dev/ui';
 import { DeliveryManage, NewDeliveryButton, PaymentReview, isEditable } from '@/components/dev/DeliveryActions';
 import { TicketPanel } from '@/components/dev/TicketPanel';
+import { ProjectLifecycle } from '@/components/dev/ProjectLifecycle';
+import { SourcePanel } from '@/components/dev/SourcePanel';
+import { GithubReturnNotice } from '@/components/dev/GithubPicker';
+import type { ProjectWithDeliveries } from '@/lib/contracts';
 import { useDevTickets } from '@/lib/queries/tickets';
 import { ApiClientError, errorMessage } from '@/lib/api/client';
 import type { Delivery, DeliveryStatus } from '@/lib/contracts';
@@ -46,13 +50,25 @@ export default function ProjectPage() {
 
   return (
     <DevPage>
+      <GithubReturnNotice />
       <BackLink />
       <PageHeader
         eyebrow={`Projet créé le ${formatDate(project.createdAt)}`}
         title={project.name}
-        actions={<NewDeliveryButton projectId={project.id} onCreated={d => setSelectedId(d.id)} />}
+        actions={
+          <>
+            {delivery?.demoUrl ? (
+              <Link href={`/apercu/${delivery.id}`} className="cta-primary rounded-full px-5 py-3 text-[14.5px]">
+                <ExternalIcon size={16} /> Voir l’application
+              </Link>
+            ) : null}
+            {project.status === 'unassigned' ? null : <NewDeliveryButton projectId={project.id} onCreated={d => setSelectedId(d.id)} />}
+          </>
+        }
       />
       {project.description ? <p className="-mt-4 mb-8 max-w-2xl text-[15px] text-f-muted">{project.description}</p> : null}
+
+      <ProjectLifecycle project={project} demoReady={project.deliveries[0]?.status === 'demo_ready' && Boolean(project.deliveries[0]?.demoUrl)} />
 
       {project.deliveries.length > 1 ? (
         <div role="group" aria-label="Livraisons du projet" className="mb-6 flex flex-wrap gap-2">
@@ -73,11 +89,11 @@ export default function ProjectPage() {
       ) : null}
 
       {delivery ? (
-        <DeliveryView key={delivery.id} delivery={delivery} />
+        <DeliveryView key={delivery.id} delivery={delivery} project={project} />
       ) : (
         <Card className="p-10 text-center">
           <p className="font-display text-[22px]">Aucune livraison</p>
-          <p className="mt-2 text-[15px] text-f-muted">Ce projet n’a pas encore de livraison à envoyer à un client.</p>
+          <p className="mt-2 text-[15px] text-f-muted">La livraison est créée quand vous assignez un client au projet.</p>
         </Card>
       )}
     </DevPage>
@@ -92,7 +108,7 @@ function BackLink() {
   );
 }
 
-function DeliveryView({ delivery: d }: { delivery: Delivery }) {
+function DeliveryView({ delivery: d, project }: { delivery: Delivery; project: ProjectWithDeliveries }) {
   const { data: tickets } = useDevTickets();
   // Un ticket non tranché bloque aussi la modification et l'annulation (règle du serveur).
   const contested = tickets?.some(t => t.deliveryId === d.id && (t.status === 'awaiting_dev' || t.status === 'open')) ?? false;
@@ -124,6 +140,8 @@ function DeliveryView({ delivery: d }: { delivery: Delivery }) {
             <p className="mt-3 rounded-xl bg-[var(--danger-100)] px-4 py-3 text-[14px] text-[var(--danger-800)]">{d.failure.message}</p>
           ) : null}
         </Card>
+
+        <SourcePanel delivery={d} project={project} />
 
         {d.pendingPaymentId ? <PaymentReview delivery={d} /> : null}
         <TicketPanel deliveryId={d.id} />

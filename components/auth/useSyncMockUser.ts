@@ -16,7 +16,7 @@ export function useSyncMockUser() {
     if (!user.role) return;
     loginCustomUser({
       fullName: user.name,
-      email: user.email,
+      email: user.email ?? undefined,
       phone: user.phone ?? undefined,
       businessName: user.businessName ?? undefined,
       role: user.role,

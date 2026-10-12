@@ -13,7 +13,8 @@ export const GET = handle(async (request) => {
 
   const fees = await prisma.platformFee.findMany({
     where: status ? { status } : {},
-    orderBy: { declaredAt: "asc" },
+    // File à confirmer : la plus ancienne d'abord. Décisions passées : les plus récentes d'abord.
+    orderBy: { declaredAt: status === "declared" ? "asc" : "desc" },
     take: 100,
     include: { delivery: { select: { amountXof: true, clientName: true, project: { select: { name: true } } } } },
   });

@@ -34,6 +34,16 @@ export default function ClientDashboardPage() {
     <DevPage>
       <PageHeader eyebrow="Espace client" title={firstName ? `Bonjour, ${firstName}` : 'Tableau de bord'} />
 
+      {me && !me.email ? (
+        <Link href="/client/profile" className="mb-5 flex items-center gap-3 rounded-[20px] border border-[var(--warning)] bg-[var(--warning-100)] px-5 py-4 text-[14.5px] text-[var(--warning-800)]">
+          <span className="min-w-0 flex-1">
+            <strong className="block">Ajoutez votre adresse e-mail</strong>
+            Pour recevoir vos factures et pouvoir récupérer votre compte.
+          </span>
+          <ChevronRightIcon size={16} className="shrink-0" />
+        </Link>
+      ) : null}
+
       {isPending ? (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {[0, 1, 2, 3].map(i => (

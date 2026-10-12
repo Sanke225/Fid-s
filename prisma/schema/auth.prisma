@@ -21,18 +21,29 @@ model User {
   businessName        String?   @map("business_name")
   // Dernière ouverture de la cloche : les événements plus récents sont « non lus ».
   notificationsSeenAt DateTime? @map("notifications_seen_at") @db.Timestamptz
+  // Version des CGU et de la politique de confidentialité acceptée (lib/legal.ts TERMS_VERSION) et sa date.
+  termsAcceptedAt     DateTime? @map("terms_accepted_at") @db.Timestamptz
+  termsVersion        String?   @map("terms_version")
+  // Compte supprimé par son titulaire : données personnelles effacées, ligne gardée pour les paiements et factures.
+  deletedAt           DateTime? @map("deleted_at") @db.Timestamptz
+  // Identifiant de connexion (plugin username de Better Auth) : donné aux clients dont le dev a créé le compte.
+  username            String?   @unique
+  // Compte créé par un dev avec un mot de passe provisoire : à changer avant toute autre action.
+  mustChangePassword  Boolean   @default(false) @map("must_change_password")
   createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
-  sessions         Session[]
-  accounts         Account[]
-  projects         Project[]
-  payoutMethods    PayoutMethod[]
-  clientDeliveries Delivery[]     @relation("DeliveryClient")
-  ticketsOpened    Ticket[]       @relation("TicketOpenedBy")
-  ticketsResolved  Ticket[]       @relation("TicketResolvedBy")
-  paymentsDecided  Payment[]      @relation("PaymentDecidedBy")
-  feesDecided      PlatformFee[]  @relation("PlatformFeeDecidedBy")
+  sessions            Session[]
+  accounts            Account[]
+  projects            Project[]
+  clientProjects      Project[]            @relation("ProjectClient")
+  githubInstallations GithubInstallation[]
+  payoutMethods       PayoutMethod[]
+  clientDeliveries    Delivery[]           @relation("DeliveryClient")
+  ticketsOpened       Ticket[]             @relation("TicketOpenedBy")
+  ticketsResolved     Ticket[]             @relation("TicketResolvedBy")
+  paymentsDecided     Payment[]            @relation("PaymentDecidedBy")
+  feesDecided         PlatformFee[]        @relation("PlatformFeeDecidedBy")
 
   @@map("users")
 }

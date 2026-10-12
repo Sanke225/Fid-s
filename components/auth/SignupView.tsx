@@ -140,11 +140,12 @@ export function SignupView({ providers, pendingUser }: SignupViewProps) {
 
     // Le compte existe désormais : un échec ici ne doit pas bloquer l'accès.
     try {
-      await chooseRole(role);
+      // Case cochée (vérifiée plus haut) : l’acceptation des CGU est enregistrée avec la date et la version.
+      await chooseRole(role, terms);
       finish(await updateMe({ phone: normalized ?? undefined, businessName: business.trim() || undefined }));
     } catch (err) {
       setNotice(`Votre compte est créé, mais une information n’a pas pu être enregistrée (${failureMessage(err)}). Vous pourrez la compléter dans votre profil.`);
-      finish({ id: '', name: name.trim(), email: email.trim(), image: null, role, phone: null, businessName: null });
+      finish({ id: '', name: name.trim(), email: email.trim(), image: null, role, phone: null, businessName: null, username: null, mustChangePassword: false, emailVerified: false });
     } finally {
       setBusy(false);
     }
@@ -415,7 +416,8 @@ function TermsCheckbox({ checked, onChange, error }: { checked: boolean; onChang
           J’accepte les{' '}
           <Link href="/cgu" className="font-semibold text-f-ink-accent underline underline-offset-2">conditions d’utilisation</Link>{' '}
           et les{' '}
-          <Link href="/cf" className="font-semibold text-f-ink-accent underline underline-offset-2">conditions financières</Link>.
+          <Link href="/cf" className="font-semibold text-f-ink-accent underline underline-offset-2">conditions financières</Link>, et j’ai lu la{' '}
+          <Link href="/confidentialite" className="font-semibold text-f-ink-accent underline underline-offset-2">politique de confidentialité</Link>.
         </span>
       </label>
       {error ? <p className="mt-1.5 pl-8 text-[13px] font-medium text-[var(--danger-800)]">{error}</p> : null}

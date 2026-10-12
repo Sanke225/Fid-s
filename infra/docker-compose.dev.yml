@@ -22,6 +22,24 @@ services:
     volumes:
       - tenant-db-data:/var/lib/postgresql/data
 
+  # Routeur des démos : http://<app>.demo.localhost:8088 → conteneur de la démo.
+  # Il ne lit que les conteneurs marqués fids.space=true par le worker (jamais les autres).
+  edge:
+    image: traefik:v3.6
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker.constraints=Label(`fids.space`,`true`)
+      - --entrypoints.web.address=:80
+      - --providers.file.filename=/etc/traefik/dynamic.yml
+    ports:
+      - "8088:80"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/dynamic.yml:/etc/traefik/dynamic.yml:ro
+
   mailpit:
     image: axllent/mailpit
     ports:

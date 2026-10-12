@@ -34,13 +34,15 @@ export type AdminDelivery = z.infer<typeof AdminDelivery>;
 export const AdminUser = z.object({
   id: Id,
   name: z.string(),
-  email: z.email(),
+  // Nul pour un compte client créé sans e-mail, ou un compte supprimé.
+  email: z.string().nullable(),
   role: UserRole.nullable(),
   phone: z.string().nullable(),
   businessName: z.string().nullable(),
   // dev : livraisons créées ; client : livraisons rattachées.
   deliveriesCount: z.int(),
   createdAt: IsoDate,
+  deletedAt: IsoDate.nullable(),
 });
 export type AdminUser = z.infer<typeof AdminUser>;
 

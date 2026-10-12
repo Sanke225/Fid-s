@@ -36,9 +36,10 @@ export const POST = handle<Context>(async (request, { params }) => {
       await tx.$queryRaw`SELECT id FROM deliveries WHERE id = ${delivery.id} FOR UPDATE`;
       const current = await tx.delivery.findUniqueOrThrow({
         where: { id: delivery.id },
-        select: { status: true, amountXof: true, expiresAt: true, clientUserId: true },
+        select: { status: true, amountXof: true, expiresAt: true, clientUserId: true, project: { select: { status: true } } },
       });
-      if (current.status !== "demo_ready" || (current.expiresAt && current.expiresAt <= now)) {
+      // Payable seulement une fois que le dev a déclaré le projet terminé.
+      if (current.status !== "demo_ready" || current.project.status !== "finished" || (current.expiresAt && current.expiresAt <= now)) {
         throw new HttpError(409, "DELIVERY_NOT_PAYABLE", "Cette livraison ne peut pas être payée pour le moment.");
       }
 

@@ -28,8 +28,9 @@ export async function apiFetch<T>(path: string, { method = 'GET', body, signal }
       method,
       signal,
       credentials: 'same-origin',
-      headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
-      body: body === undefined ? undefined : JSON.stringify(body),
+      // FormData (dépôt d'archive) : le navigateur pose lui-même l'en-tête multipart.
+      headers: body === undefined || body instanceof FormData ? undefined : { 'Content-Type': 'application/json' },
+      body: body === undefined ? undefined : body instanceof FormData ? body : JSON.stringify(body),
     });
   } catch (e) {
     if (e instanceof DOMException && e.name === 'AbortError') throw e;

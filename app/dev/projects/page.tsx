@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { ChevronRightIcon, SearchIcon } from '@/components/Icons';
 import { Card, DevPage, EmptyState, ErrorState, PageHeader, Skeleton, StatusBadge } from '@/components/dev/ui';
+import { ProjectStatusBadge } from '@/components/dev/ProjectLifecycle';
 import { errorMessage } from '@/lib/api/client';
 import { STATUS_GROUPS, formatXof, latestDelivery, timeAgo } from '@/lib/delivery-ui';
 import { useProjects } from '@/lib/queries/projects';
@@ -108,8 +109,11 @@ export default function ProjectsPage() {
                     </span>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-[16px] font-bold" title={p.name}>{p.name}</p>
-                      <p className="truncate text-[13.5px] text-f-muted">{d ? `Client : ${d.client.name}` : 'Aucune livraison'}</p>
-                      {d ? <div className="mt-2"><StatusBadge status={d.status} /></div> : null}
+                      <p className="truncate text-[13.5px] text-f-muted">{d ? `Client : ${d.client.name}` : 'Aucun client assigné'}</p>
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        <ProjectStatusBadge status={p.status} />
+                        {d && p.status === 'finished' ? <StatusBadge status={d.status} /> : null}
+                      </div>
                     </div>
                   </div>
                   {d?.pendingPaymentId ? (

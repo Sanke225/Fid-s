@@ -20,6 +20,7 @@ import { clientAction } from '@/lib/client-ui';
 import { useTheme } from '@/lib/theme';
 import { NAV, isActive, type NavItem } from './nav';
 import { NotificationBell } from './NotificationBell';
+import { TermsGate } from '@/components/account/TermsGate';
 
 /**
  * Coque des espaces connectés (dev, client, admin) : colonne de navigation à gauche,
@@ -44,6 +45,7 @@ export function AppShell({ role, children }: { role: UserRole; children: ReactNo
 
   return (
     <div className="fd-ui flex min-h-svh bg-f-bg text-f-text">
+      <TermsGate />
       <a href="#contenu-app" className="skip-link">Aller au contenu</a>
 
       <aside className="sticky top-0 hidden h-svh w-[264px] shrink-0 border-r border-f-line bg-f-card/70 lg:block">
@@ -234,7 +236,7 @@ function UserMenu() {
             className="absolute bottom-full left-0 right-0 mb-2 overflow-hidden rounded-2xl border border-f-line bg-f-card p-1.5 shadow-f-float"
           >
             <div className="px-3 py-2.5">
-              <p className="truncate text-[13.5px] font-semibold">{me?.email}</p>
+              <p className="truncate text-[13.5px] font-semibold">{me?.email ?? me?.username}</p>
               {me?.role ? <p className="text-[12px] text-f-muted">Compte {ROLE_LABEL[me.role].toLowerCase()}</p> : null}
             </div>
             <div className="my-1 h-px bg-f-line" />

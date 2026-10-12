@@ -70,7 +70,10 @@ export function LoginView({ providers, retour, oauthError }: LoginViewProps) {
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     const errs: typeof fieldErrors = {};
-    if (!EMAIL_RE.test(email.trim())) errs.email = 'Saisissez une adresse e-mail valide.';
+    // E-mail, ou identifiant d'un compte client créé par son développeur.
+    const login = email.trim();
+    const byUsername = !login.includes('@');
+    if (byUsername ? login.length < 3 : !EMAIL_RE.test(login)) errs.email = 'Saisissez votre adresse e-mail ou votre identifiant.';
     if (!password) errs.password = 'Saisissez votre mot de passe.';
     setFieldErrors(errs);
     setFormError(null);
@@ -81,11 +84,18 @@ export function LoginView({ providers, retour, oauthError }: LoginViewProps) {
     }
 
     setStatus('loading');
-    const { error } = await authClient.signIn.email({ email: email.trim(), password });
+    const { error } = byUsername
+      ? await authClient.signIn.username({ username: login, password })
+      : await authClient.signIn.email({ email: login, password });
     if (error) return fail(authErrorMessage(error));
 
     try {
       const user = await fetchMe();
+      // Compte créé par un développeur : choisir son mot de passe avant tout.
+      if (user.mustChangePassword) {
+        router.push('/compte/mot-de-passe');
+        return;
+      }
       if (!user.role) {
         router.push('/inscription?etape=role');
         return;
@@ -132,13 +142,13 @@ export function LoginView({ providers, retour, oauthError }: LoginViewProps) {
       <form onSubmit={submit} noValidate className="space-y-4">
         <FormAlert message={formError} />
         <Field
-          label="Adresse e-mail"
+          label="E-mail ou identifiant"
           icon={<MailIcon size={18} />}
-          type="email"
+          type="text"
           name="email"
-          autoComplete="email"
-          inputMode="email"
-          placeholder="vous@exemple.ci"
+          autoComplete="username"
+          autoCapitalize="none"
+          placeholder="vous@exemple.sn ou mariam.traore42"
           value={email}
           onChange={e => setEmail(e.target.value)}
           error={fieldErrors.email}

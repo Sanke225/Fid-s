@@ -57,7 +57,17 @@ export default function ClientDeliveryPage() {
   return (
     <DevPage>
       <BackLink />
-      <PageHeader eyebrow={`Livraison de ${d.devName}`} title={d.projectName} />
+      <PageHeader
+        eyebrow={`Livraison de ${d.devName}`}
+        title={d.projectName}
+        actions={
+          d.demoUrl ? (
+            <Link href={`/apercu/${d.id}`} className="cta-primary rounded-full px-5 py-3 text-[14.5px]">
+              Voir l’application
+            </Link>
+          ) : null
+        }
+      />
 
       <div className="grid items-start gap-5 lg:grid-cols-[1.4fr_1fr]">
         <div className="space-y-5">

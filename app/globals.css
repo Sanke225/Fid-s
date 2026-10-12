@@ -614,3 +614,17 @@ html.lenis { scroll-behavior: auto; }
   .marquee-dup { display: none !important; }
   ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
 }
+
+/* Texte des pages légales (components/legal/LegalPage.tsx) : Tailwind remet listes et marges à zéro. */
+@layer components {
+  .legal-prose { font-size: 15.5px; line-height: 1.7; }
+  .legal-prose > * + * { margin-top: 12px; }
+  .legal-prose ul { list-style: disc; padding-left: 22px; }
+  .legal-prose ol { list-style: decimal; padding-left: 22px; }
+  .legal-prose li + li { margin-top: 6px; }
+  .legal-prose a { color: var(--color-accent-700); text-decoration: underline; text-underline-offset: 3px; }
+  .legal-prose strong { font-weight: 650; }
+  .legal-prose table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .legal-prose th, .legal-prose td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--color-divider); }
+  .legal-prose th { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 600; }
+}

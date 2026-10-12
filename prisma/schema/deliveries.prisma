@@ -5,6 +5,10 @@ enum DeliveryStatus {
   building
   build_failed
   demo_ready
+  // Le client a payé le dev (dépôt confirmé) ; il doit encore régler les frais de service Fid’s (5 %).
+  // La démo reste consultable, rien n'est remis.
+  fee_pending
+  // Dev payé ET frais Fid’s confirmés : la passation peut commencer.
   paid
   handing_over
   handover_failed
@@ -15,18 +19,44 @@ enum DeliveryStatus {
   @@map("delivery_status")
 }
 
+// Cycle de vie du projet, vu à l'identique par le dev et par le client assigné.
+// La livraison (paiement, passation) commence quand le projet est assigné.
+enum ProjectStatus {
+  unassigned
+  assigned
+  // Le dev a cliqué « Début du développement » : le client doit choisir son nom de domaine.
+  in_progress
+  // Le dev a cliqué « Terminé » : la démo devient visible pour le client.
+  finished
+
+  @@map("project_status")
+}
+
 model Project {
-  id          String   @id @default(uuid())
-  ownerId     String   @map("owner_id")
-  owner       User     @relation(fields: [ownerId], references: [id], onDelete: Restrict)
-  name        String
-  description String?
-  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  id                   String              @id @default(uuid())
+  ownerId              String              @map("owner_id")
+  owner                User                @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  name                 String
+  description          String?
+  // N'est écrit QUE par core/projects.ts.
+  status               ProjectStatus       @default(unassigned)
+  clientUserId         String?             @map("client_user_id")
+  clientUser           User?               @relation("ProjectClient", fields: [clientUserId], references: [id], onDelete: Restrict)
+  // Dépôt GitHub relié (lecture seule, via l'installation GitHub App du dev) : « Importer le dernier commit ».
+  githubInstallationId String?             @map("github_installation_id")
+  githubInstallation   GithubInstallation? @relation(fields: [githubInstallationId], references: [id], onDelete: SetNull)
+  githubRepo           String?             @map("github_repo")
+  githubBranch         String?             @map("github_branch")
+  assignedAt           DateTime?           @map("assigned_at") @db.Timestamptz
+  startedAt            DateTime?           @map("started_at") @db.Timestamptz
+  finishedAt           DateTime?           @map("finished_at") @db.Timestamptz
+  createdAt            DateTime            @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt            DateTime            @updatedAt @map("updated_at") @db.Timestamptz
 
   deliveries Delivery[]
 
   @@index([ownerId])
+  @@index([clientUserId])
   @@map("projects")
 }
 
@@ -64,6 +94,7 @@ model Delivery {
   builds         Build[]          @relation("DeliveryBuilds")
   spaces         Space[]
   payments       Payment[]
+  platformFees   PlatformFee[]
   tickets        Ticket[]
   handover       Handover?
   invoice        Invoice?
@@ -90,4 +121,20 @@ model Event {
   @@index([deliveryId, occurredAt])
   @@index([dispatchedAt])
   @@map("events")
+}
+
+// Installation de la GitHub App de Fid’s sur un compte (personnel ou organisation) du dev.
+// Vérifiée à la connexion : l'installation doit être visible par le compte GitHub du dev (jamais un simple numéro reçu).
+model GithubInstallation {
+  id             String   @id @default(uuid())
+  userId         String   @map("user_id")
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  installationId BigInt   @unique @map("installation_id")
+  accountLogin   String   @map("account_login")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  projects Project[]
+
+  @@index([userId])
+  @@map("github_installations")
 }

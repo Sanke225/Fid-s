@@ -42,6 +42,10 @@ model SourceArchive {
   sizeBytes        BigInt    @map("size_bytes")
   sha256           String
   storagePath      String    @map("storage_path")
+  // Import depuis GitHub : dépôt et commit exacts (la version testée par le client est traçable).
+  gitRepo          String?   @map("git_repo")
+  gitCommitSha     String?   @map("git_commit_sha")
+  gitCommitMessage String?   @map("git_commit_message")
   // Chiffrement par enveloppe : clé propre à l'archive, chiffrée par la clé maîtresse.
   wrappedKey       Bytes     @map("wrapped_key")
   iv               Bytes
@@ -74,6 +78,8 @@ model Build {
   sourceArchiveId String        @map("source_archive_id")
   sourceArchive   SourceArchive @relation(fields: [sourceArchiveId], references: [id], onDelete: Restrict)
   status          BuildStatus   @default(queued)
+  // « Réinitialiser la démo » : même image et même code, base vidée puis données de démo relancées.
+  resetDemo       Boolean       @default(false) @map("reset_demo")
   // Le recette.json validé.
   manifest        Json?
   imageRef        String?       @map("image_ref")

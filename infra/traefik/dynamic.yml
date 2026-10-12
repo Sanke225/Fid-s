@@ -1,0 +1,16 @@
+# Routes fixes du routeur des démos (les démos elles-mêmes sont déclarées par labels Docker, par le worker).
+# apercu.<domaine des démos> → l'application Fid’s (Next.js) : page « Voir l'application » sur le domaine des démos.
+# En local : Next.js tourne sur la machine, port 3000 (voir BETTER_AUTH_URL). À adapter si vous changez de port.
+http:
+  routers:
+    apercu:
+      rule: Host(`apercu.demo.localhost`)
+      entryPoints: [web]
+      service: fids-app
+      # Priorité haute : jamais masqué par une démo.
+      priority: 1000
+  services:
+    fids-app:
+      loadBalancer:
+        servers:
+          - url: http://host.docker.internal:3000

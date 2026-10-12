@@ -4,6 +4,7 @@ import { BRAND } from '../lib/brand'
 import { useEffect } from 'react'
 import { ApiError } from '../lib/api'
 import { BigScreen } from './BigScreen'
+import { FeeView } from './FeeView'
 import { OfferView } from './OfferView'
 import { ErrorScreen, LoadingScreen, PreparingScreen, UnavailableScreen } from './StateScreens'
 import { UnlockedView } from './UnlockedView'
@@ -13,13 +14,10 @@ import { useDelivery } from './useDelivery'
 export function DeliveryPage({
   token,
   bigScreen = false,
-  returning = false,
 }: {
   token: string
   /** ?ecran=grand */
   bigScreen?: boolean
-  /** ?retour=1 : le client revient de la page du fournisseur */
-  returning?: boolean
 }) {
   const { data, error, isPending, refetch } = useDelivery(token)
 
@@ -39,7 +37,9 @@ export function DeliveryPage({
     case 'preparing':
       return <PreparingScreen projectName={data.projectName} devName={data.devName} />
     case 'demo_ready':
-      return <OfferView token={token} delivery={data} returning={returning} />
+      return <OfferView token={token} delivery={data} />
+    case 'awaiting_fee':
+      return <FeeView token={token} delivery={data} />
     case 'paid':
     case 'handing_over':
     case 'delivered':

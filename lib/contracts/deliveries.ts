@@ -7,6 +7,8 @@ export const DeliveryStatus = z.enum([
   "building",
   "build_failed",
   "demo_ready",
+  // Le dev a confirmé le dépôt ; le client doit encore régler les frais de service Fid’s.
+  "fee_pending",
   "paid",
   "handing_over",
   "handover_failed",
@@ -20,6 +22,8 @@ export type DeliveryStatus = z.infer<typeof DeliveryStatus>;
 export const PublicDeliveryStatus = z.enum([
   "preparing",
   "demo_ready",
+  // Paiement au dev confirmé : reste à régler les frais de service Fid’s pour recevoir l'application.
+  "awaiting_fee",
   "paid",
   "handing_over",
   "delivered",
@@ -35,6 +39,8 @@ export function toPublicStatus(status: DeliveryStatus): PublicDeliveryStatus {
       return "preparing";
     case "handover_failed":
       return "handing_over";
+    case "fee_pending":
+      return "awaiting_fee";
     case "expired":
     case "cancelled":
       return "unavailable";
@@ -43,10 +49,40 @@ export function toPublicStatus(status: DeliveryStatus): PublicDeliveryStatus {
   }
 }
 
+// Ce que voit le client tant que le dev n'a pas cliqué « Terminé » : la démo existe peut-être déjà
+// (aperçu privé du dev), mais elle ne lui est ni montrée ni payable.
+export function toClientStatus(status: DeliveryStatus, projectStatus: ProjectStatus): PublicDeliveryStatus {
+  if (status === "demo_ready" && projectStatus !== "finished") return "preparing";
+  return toPublicStatus(status);
+}
+
+// Cycle de vie du projet, identique chez le dev et chez le client assigné.
+export const ProjectStatus = z.enum(["unassigned", "assigned", "in_progress", "finished"]);
+export type ProjectStatus = z.infer<typeof ProjectStatus>;
+
+// Client assigné au projet (compte Fid’s).
+export const ProjectClient = z.object({
+  id: Id,
+  name: z.string(),
+  // Identifiant de connexion, si le compte a été créé par le dev.
+  username: z.string().nullable(),
+  phone: z.string().nullable(),
+  // Le client n'a pas encore remplacé son mot de passe provisoire (pas encore connecté).
+  pendingFirstLogin: z.boolean(),
+});
+export type ProjectClient = z.infer<typeof ProjectClient>;
+
 export const Project = z.object({
   id: Id,
   name: z.string(),
   description: z.string().nullable(),
+  status: ProjectStatus,
+  client: ProjectClient.nullable(),
+  // Dépôt GitHub relié (« Importer le dernier commit »).
+  github: z.object({ installationId: Id, account: z.string(), repo: z.string(), branch: z.string() }).nullable(),
+  assignedAt: IsoDate.nullable(),
+  startedAt: IsoDate.nullable(),
+  finishedAt: IsoDate.nullable(),
   createdAt: IsoDate,
   updatedAt: IsoDate,
 });
@@ -75,9 +111,22 @@ export const Delivery = z.object({
   // Non nul à delivered.
   clientUrl: z.url().nullable(),
   currentBuildId: Id.nullable(),
+  // Dernière installation lancée (en cours, réussie ou échouée) : suivie en direct par le dev.
+  lastBuild: z
+    .object({
+      id: Id,
+      status: z.enum(["queued", "running", "succeeded", "failed"]),
+      queuedAt: IsoDate,
+      // Code importé depuis GitHub : commit exact.
+      commit: z.object({ repo: z.string(), sha: z.string(), message: z.string() }).nullable(),
+    })
+    .nullable(),
   failure: z.object({ code: z.string(), message: z.string() }).nullable(),
   // Paiement déclaré par le client et en attente de la confirmation du dev.
   pendingPaymentId: Id.nullable(),
+  // Frais de service Fid’s payés par le client (0 % pour le dev). Montant toujours connu ;
+  // statut nul tant que le dev n'a pas confirmé le dépôt.
+  fee: z.object({ amountXof: AmountXof, status: z.enum(["due", "declared", "confirmed"]).nullable() }),
   expiresAt: IsoDate.nullable(),
   paidAt: IsoDate.nullable(),
   deliveredAt: IsoDate.nullable(),
@@ -114,6 +163,13 @@ export const PublicDelivery = z.object({
   activePayment: z.object({ id: Id, status: PaymentStatus }).nullable(),
   // Lien vers l'espace client, seulement avec le bon X-Payer-Token, une fois livré.
   clientSpaceUrl: z.url().nullable(),
+  // Frais de service Fid’s (5 % du montant, payés par le client). Numéros et frais en cours : visibles
+  // seulement pour l'appareil qui a payé le dev (X-Payer-Token), une fois le dépôt confirmé.
+  fee: z.object({
+    amountXof: AmountXof,
+    payoutMethods: z.array(z.object({ provider: PaymentProvider, phone: z.string(), label: z.string() })),
+    activeFee: z.object({ id: Id, status: z.enum(["declared", "confirmed", "rejected", "expired"]) }).nullable(),
+  }),
   expiresAt: IsoDate.nullable(),
 });
 export type PublicDelivery = z.infer<typeof PublicDelivery>;
@@ -139,6 +195,31 @@ const ClientInput = z.object({
   email: z.email().optional(),
   phone: Phone.optional(),
 });
+
+// POST /api/v1/projects/:projectId/client — assigne un client au projet et crée la livraison.
+// existing : un client qui a déjà un compte (identifiant ou e-mail). create : le dev crée son compte.
+export const AssignClientInput = z.object({
+  amountXof: AmountXof,
+  includeSource: z.boolean().default(true),
+  client: z.discriminatedUnion("mode", [
+    z.object({ mode: z.literal("existing"), login: z.string().trim().min(3).max(200) }),
+    z.object({
+      mode: z.literal("create"),
+      name: z.string().trim().min(2).max(100),
+      email: z.email().optional(),
+      phone: Phone.optional(),
+    }),
+  ]),
+});
+export type AssignClientInput = z.infer<typeof AssignClientInput>;
+
+// Réponse de l'assignation. credentials : seulement si le compte vient d'être créé, montré une seule fois.
+export const AssignClientResult = z.object({
+  project: Project,
+  delivery: Delivery,
+  credentials: z.object({ username: z.string(), temporaryPassword: z.string() }).nullable(),
+});
+export type AssignClientResult = z.infer<typeof AssignClientResult>;
 
 // POST /api/v1/projects/:projectId/deliveries
 export const CreateDeliveryInput = z.object({
@@ -171,3 +252,11 @@ export const ClientSpace = z.object({
   deliveredAt: IsoDate,
 });
 export type ClientSpace = z.infer<typeof ClientSpace>;
+
+// PUT /api/v1/projects/:projectId/github — relie un dépôt GitHub (installation du dev, dépôt autorisé, branche).
+export const LinkGithubInput = z.object({
+  installationId: Id,
+  repo: z.string().trim().regex(/^[\w.-]+\/[\w.-]+$/, "Format attendu : propriétaire/dépôt"),
+  branch: z.string().trim().min(1).max(200),
+});
+export type LinkGithubInput = z.infer<typeof LinkGithubInput>;

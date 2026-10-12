@@ -25,7 +25,7 @@ export function UnlockedView({ delivery }: { delivery: PublicDelivery }) {
           <LockIcon open className="size-12 animate-pop" />
         </div>
         <h1 className="mt-5 text-2xl font-extrabold tracking-tight text-balance">
-          {delivered ? 'Votre application est prête' : 'Paiement reçu, merci !'}
+          {delivered ? 'Votre application est prête' : 'Règlements reçus, merci !'}
         </h1>
         <p className="mt-1.5 text-sm text-ink-soft">{delivery.projectName}</p>
       </div>

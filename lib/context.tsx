@@ -1,12 +1,11 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { AppState, Project, ProjectStatus, Role, Theme, User } from './types';
+import { AppState, Project, ProjectStatus, Role, User } from './types';
 import { INITIAL_STATE, STORAGE_KEY } from './store';
 
 interface RecetteContextType {
   state: AppState;
-  setTheme: (theme: Theme) => void;
   switchRole: (role: Role) => void;
   loginCustomUser: (userData: Partial<User> & { role: Role }) => void;
   getProjectById: (id: string) => Project | undefined;
@@ -52,9 +51,6 @@ export function RecetteProvider({ children }: { children: ReactNode }) {
       if (saved) {
         const parsed = JSON.parse(saved);
         setState(parsed);
-        document.documentElement.setAttribute('data-theme', parsed.theme || 'light');
-      } else {
-        document.documentElement.setAttribute('data-theme', 'light');
       }
     } catch (e) {
       console.warn('Erreur chargement localStorage:', e);
@@ -67,15 +63,10 @@ export function RecetteProvider({ children }: { children: ReactNode }) {
     if (!mounted) return;
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-      document.documentElement.setAttribute('data-theme', state.theme);
     } catch (e) {
       console.warn('Erreur sauvegarde localStorage:', e);
     }
   }, [state, mounted]);
-
-  const setTheme = (theme: Theme) => {
-    setState(prev => ({ ...prev, theme }));
-  };
 
   const switchRole = (role: Role) => {
     let currentUser: User;
@@ -391,7 +382,6 @@ export function RecetteProvider({ children }: { children: ReactNode }) {
     <RecetteContext.Provider
       value={{
         state,
-        setTheme,
         switchRole,
         loginCustomUser,
         getProjectById,

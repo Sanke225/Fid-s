@@ -28,18 +28,5 @@ export function daysUntil(iso: string, now = Date.now()): number {
   return Math.max(0, Math.ceil((new Date(iso).getTime() - now) / 86_400_000))
 }
 
-/** Numéro ivoirien : 10 chiffres, avec ou sans +225 et espaces. */
-export function normalizeCiPhone(input: string): string | null {
-  const digits = input.replace(/[\s.-]/g, '').replace(/^(\+|00)225/, '')
-  return /^0\d{9}$/.test(digits) ? digits : null
-}
-
-export function formatCiPhone(digits: string): string {
-  return digits.replace(/(\d{2})(?=\d)/g, '$1 ').trim()
-}
-
-export const providerLabel: Record<string, string> = {
-  wave: 'Wave',
-  orange_money: 'Orange Money',
-  mock: 'Paiement simulé',
-}
+export { formatPhone, normalizePhone } from '@/lib/phone'
+export { PROVIDER_NAME as providerLabel } from '@/components/payments/ProviderLogo'

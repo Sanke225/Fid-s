@@ -12,7 +12,8 @@ export const GET = handle(async (request) => {
 
   const tickets = await prisma.ticket.findMany({
     where: status ? { status } : {},
-    orderBy: { createdAt: "asc" },
+    // File à traiter : le plus ancien d'abord. Décisions passées : les plus récentes d'abord.
+    orderBy: status === "open" || status === "awaiting_dev" ? { createdAt: "asc" } : { createdAt: "desc" },
     take: 100,
   });
   return Response.json({ items: tickets.map(toTicketDto) });

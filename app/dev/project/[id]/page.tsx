@@ -1,307 +1,265 @@
 'use client';
 
-import React, { useState, use } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useRecette } from '@/lib/context';
+import { useParams } from 'next/navigation';
+import { useState, type ReactNode } from 'react';
+import { ArrowLeftIcon, CopyIcon, ExternalIcon, WhatsAppIcon } from '@/components/Icons';
 import { useToast } from '@/components/Toast';
-import { InvoiceModal } from '@/components/InvoiceModal';
-import {
-  CheckIcon,
-  CopyIcon,
-  ExternalIcon,
-  InvoiceIcon,
-  WhatsAppIcon
-} from '@/components/Icons';
-import { ProjectStatus } from '@/lib/types';
+import { Card, DevPage, ErrorState, PageHeader, Skeleton, StatusBadge } from '@/components/dev/ui';
+import { DeliveryManage, NewDeliveryButton, PaymentReview, isEditable } from '@/components/dev/DeliveryActions';
+import { TicketPanel } from '@/components/dev/TicketPanel';
+import { ProjectLifecycle } from '@/components/dev/ProjectLifecycle';
+import { SourcePanel } from '@/components/dev/SourcePanel';
+import { GithubReturnNotice } from '@/components/dev/GithubPicker';
+import type { ProjectWithDeliveries } from '@/lib/contracts';
+import { useDevTickets } from '@/lib/queries/tickets';
+import { ApiClientError, errorMessage } from '@/lib/api/client';
+import type { Delivery, DeliveryStatus } from '@/lib/contracts';
+import { EVENT_LABEL, STATUS_UI, actorLabel, formatDate, formatPhone, formatXof, timeAgo } from '@/lib/delivery-ui';
+import { useMe } from '@/lib/queries/me';
+import { useDeliveryEvents, useProject } from '@/lib/queries/projects';
 
-export default function DevProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const resolvedParams = use(params);
-  const projectId = resolvedParams.id;
-  const router = useRouter();
-  const { getProjectById, updateProjectStatus } = useRecette();
-  const { showToast } = useToast();
+export default function ProjectPage() {
+  const { id } = useParams<{ id: string }>();
+  const { data: project, isPending, error, refetch } = useProject(id);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const [invoiceModalOpen, setInvoiceModalOpen] = useState(false);
-
-  const project = getProjectById(projectId);
-
-  if (!project) {
+  if (isPending) {
     return (
-      <div style={{ padding: '60px 20px', textAlign: 'center' }}>
-        <h2>Projet introuvable</h2>
-        <Link href="/dev/projects" className="btn btn-secondary">
-          Retour aux projets
-        </Link>
-      </div>
+      <DevPage>
+        <Skeleton className="mb-8 h-16 w-2/3" />
+        <div className="grid gap-5 lg:grid-cols-[1.4fr_1fr]">
+          <Skeleton className="h-72" />
+          <Skeleton className="h-72" />
+        </div>
+      </DevPage>
     );
   }
 
-  const deliveryUrl = typeof window !== 'undefined' ? `${window.location.origin}/client/delivery/${project.publicToken}` : `/client/delivery/${project.publicToken}`;
-  const whatsappMsg = encodeURIComponent(
-    `Bonjour ${project.client.name}, votre application "${project.name}" est prête ! Vous pouvez l'essayer en toute sécurité sur notre démo Recette : ${deliveryUrl}`
-  );
-  const whatsappUrl = `https://wa.me/?text=${whatsappMsg}`;
-
-  const STEPS = [
-    { key: 'draft', label: '1. Envoi', desc: 'Archive déposée' },
-    { key: 'building', label: '2. Installation', desc: 'Build & Conteneur' },
-    { key: 'demo_ready', label: '3. Démo en ligne', desc: 'Essai par le client' },
-    { key: 'paid', label: '4. Paiement reçu', desc: 'Mobile Money validé' },
-    { key: 'delivered', label: '5. Livré', desc: 'Espace client prêt' }
-  ];
-
-  function getStepIndex(status: ProjectStatus) {
-    if (status === 'draft') return 0;
-    if (status === 'building') return 1;
-    if (status === 'demo_ready') return 2;
-    if (status === 'paid' || status === 'handing_over' || status === 'handover_failed') return 3;
-    if (status === 'delivered') return 4;
-    return 2;
+  if (error) {
+    const notFound = error instanceof ApiClientError && error.status === 404;
+    return (
+      <DevPage>
+        <BackLink />
+        <ErrorState message={notFound ? 'Ce projet est introuvable.' : errorMessage(error)} onRetry={notFound ? undefined : () => refetch()} />
+      </DevPage>
+    );
   }
 
-  const currentStepIdx = getStepIndex(project.status);
-
-  const copyLink = () => {
-    navigator.clipboard.writeText(deliveryUrl).then(() => {
-      showToast('Lien de livraison copié dans le presse-papier !', 'success');
-    });
-  };
+  const delivery = project.deliveries.find(d => d.id === selectedId) ?? project.deliveries[0] ?? null;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', padding: 'clamp(16px, 2.5vw, 32px)', maxWidth: '1380px', margin: '0 auto' }}>
-      {/* Barre supérieure */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <button
-            onClick={() => router.push('/dev/projects')}
-            style={{ width: '38px', height: '38px', borderRadius: '50%', border: '1px solid var(--color-divider)', background: 'var(--card)', cursor: 'pointer', display: 'grid', placeItems: 'center' }}
-          >
-            ←
-          </button>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 400, fontSize: 'clamp(24px, 2.8vw, 34px)', margin: 0 }}>
-                {project.name}
-              </h1>
-              <span style={{ fontSize: '12px', padding: '3px 10px', borderRadius: '999px', background: 'var(--color-accent-100)', color: 'var(--color-accent-800)', fontWeight: 700 }}>
-                {project.status.toUpperCase()}
-              </span>
-            </div>
-            <span style={{ fontSize: '13px', color: 'var(--muted)' }}>
-              Client : {project.client.name} ({project.client.phone || 'Sans téléphone'})
-            </span>
-          </div>
-        </div>
+    <DevPage>
+      <GithubReturnNotice />
+      <BackLink />
+      <PageHeader
+        eyebrow={`Projet créé le ${formatDate(project.createdAt)}`}
+        title={project.name}
+        actions={
+          <>
+            {delivery?.demoUrl ? (
+              <Link href={`/apercu/${delivery.id}`} className="cta-primary rounded-full px-5 py-3 text-[14.5px]">
+                <ExternalIcon size={16} /> Voir l’application
+              </Link>
+            ) : null}
+            {project.status === 'unassigned' ? null : <NewDeliveryButton projectId={project.id} onCreated={d => setSelectedId(d.id)} />}
+          </>
+        }
+      />
+      {project.description ? <p className="-mt-4 mb-8 max-w-2xl text-[15px] text-f-muted">{project.description}</p> : null}
 
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-          {project.status === 'delivered' && (
+      <ProjectLifecycle project={project} demoReady={project.deliveries[0]?.status === 'demo_ready' && Boolean(project.deliveries[0]?.demoUrl)} />
+
+      {project.deliveries.length > 1 ? (
+        <div role="group" aria-label="Livraisons du projet" className="mb-6 flex flex-wrap gap-2">
+          {project.deliveries.map((d, i) => (
             <button
-              onClick={() => setInvoiceModalOpen(true)}
-              className="btn btn-secondary"
-              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 18px', borderRadius: '999px', fontSize: '14px' }}
+              key={d.id}
+              type="button"
+              aria-pressed={d.id === delivery?.id}
+              onClick={() => setSelectedId(d.id)}
+              className={`rounded-full border px-3.5 py-2 text-[13.5px] font-semibold transition-colors ${
+                d.id === delivery?.id ? 'border-transparent bg-[#C84A00] text-white' : 'border-f-line bg-f-card hover:bg-f-surface'
+              }`}
             >
-              <InvoiceIcon size={16} /> Voir la Facture
+              Livraison {project.deliveries.length - i} · {STATUS_UI[d.status].label}
             </button>
-          )}
-          <Link
-            href={`/client/delivery/${project.publicToken}`}
-            className="btn btn-primary"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '12px 20px',
-              borderRadius: '999px',
-              background: 'var(--grad)',
-              color: '#fff',
-              border: 0,
-              fontSize: '14px',
-              fontWeight: 700,
-              cursor: 'pointer',
-              boxShadow: '0 6px 18px rgba(255,106,0,.35)',
-              textDecoration: 'none'
-            }}
-          >
-            <ExternalIcon size={16} color="#fff" /> Tester la vue client
-          </Link>
+          ))}
         </div>
-      </div>
+      ) : null}
 
-      {/* TIMELINE 5 ÉTAPES */}
-      <div style={{ padding: 'clamp(16px, 3vw, 24px)', borderRadius: '28px', background: 'var(--card)', boxShadow: 'var(--shadow-soft)', border: '1px solid var(--color-divider)' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 160px), 1fr))', gap: '12px', position: 'relative' }}>
-          {STEPS.map((s, idx) => {
-            const isDone = idx < currentStepIdx;
-            const isCur = idx === currentStepIdx;
-            const bg = isDone ? 'var(--success)' : isCur ? 'var(--grad)' : 'var(--color-surface)';
-            const color = isDone || isCur ? '#fff' : 'var(--muted)';
-
-            return (
-              <div
-                key={s.key}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  padding: '12px 14px',
-                  borderRadius: '18px',
-                  background: isCur ? 'var(--color-accent-100)' : 'transparent',
-                  border: isCur ? '1px solid var(--color-accent-300)' : '1px solid transparent'
-                }}
-              >
-                <span
-                  style={{
-                    width: '32px',
-                    height: '32px',
-                    borderRadius: '50%',
-                    background: bg,
-                    color,
-                    display: 'grid',
-                    placeItems: 'center',
-                    fontWeight: 700,
-                    fontSize: '13px',
-                    flex: 'none'
-                  }}
-                >
-                  {isDone ? '✓' : idx + 1}
-                </span>
-                <div>
-                  <strong style={{ fontSize: '13px', display: 'block', color: isCur ? 'var(--color-accent-900)' : 'var(--color-text)' }}>
-                    {s.label}
-                  </strong>
-                  <span style={{ fontSize: '11px', color: 'var(--muted)' }}>{s.desc}</span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* LIEN DE LIVRAISON & ACTIONS DE PARTAGE */}
-      <div style={{ padding: 'clamp(18px, 3vw, 24px)', borderRadius: '28px', background: 'var(--grad-soft)', border: '1px solid var(--color-accent-200)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-          <div>
-            <span style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--color-accent-800)' }}>
-              Lien sécurisé à transmettre au client
-            </span>
-            <div style={{ fontFamily: 'var(--mono)', fontSize: '15px', color: 'var(--color-text)', marginTop: '4px', wordBreak: 'break-all' }}>
-              {deliveryUrl}
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-            <button
-              onClick={copyLink}
-              className="btn btn-secondary"
-              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', borderRadius: '999px', fontSize: '13px' }}
-            >
-              <CopyIcon size={16} /> Copier le lien
-            </button>
-            <a
-              href={whatsappUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn btn-primary"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '10px 18px',
-                borderRadius: '999px',
-                background: '#25D366',
-                color: '#fff',
-                fontSize: '13px',
-                textDecoration: 'none'
-              }}
-            >
-              <WhatsAppIcon size={16} /> Envoyer sur WhatsApp
-            </a>
-          </div>
-        </div>
-
-        <span style={{ fontSize: '12px', color: 'var(--muted)' }}>
-          ✓ Ce lien permet à votre client d’essayer l’application en direct et de débloquer la passation via Wave ou Orange Money.
-        </span>
-      </div>
-
-      {/* CONSOLE DES LOGS D’INSTALLATION & ARCHITECTURE */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', gap: '20px' }}>
-        {/* Terminal logs */}
-        <div style={{ padding: 'clamp(18px, 3vw, 24px)', borderRadius: '28px', background: 'var(--card)', boxShadow: 'var(--shadow-soft)', border: '1px solid var(--color-divider)', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          <strong style={{ fontSize: '16px' }}>Journal d'exécution du conteneur</strong>
-          <div
-            style={{
-              background: '#0B0B0F',
-              color: '#A9C4F5',
-              padding: '16px',
-              borderRadius: '18px',
-              fontFamily: 'var(--mono)',
-              fontSize: '12px',
-              height: '240px',
-              overflowY: 'auto',
-              overflowX: 'auto',
-              display: 'flex',
-              flexDirection: 'column',
-            }}
-          >
-            {(project.logs || []).map((l, idx) => (
-              <div key={idx} style={{ opacity: l.stream === 'stderr' ? 1 : 0.85, color: l.stream === 'stderr' ? '#FFAA9F' : '#A9C4F5' }}>
-                <span style={{ color: '#6B5D51' }}>[{l.at}]</span> {l.line}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Détails du projet & Manifeste */}
-        <div style={{ padding: '24px', borderRadius: '28px', background: 'var(--card)', boxShadow: 'var(--shadow-soft)', border: '1px solid var(--color-divider)', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          <strong style={{ fontSize: '16px' }}>Spécifications de la livraison</strong>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--color-divider)' }}>
-              <span style={{ color: 'var(--muted)' }}>Solde convenu</span>
-              <strong>{(project.amountXof || 0).toLocaleString('fr-FR')} FCFA</strong>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--color-divider)' }}>
-              <span style={{ color: 'var(--muted)' }}>Code source inclus</span>
-              <strong>{project.includeSource ? 'Oui (.zip certifié)' : 'Non (Hébergement seul)'}</strong>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--color-divider)' }}>
-              <span style={{ color: 'var(--muted)' }}>Stack technique</span>
-              <span>{project.stack}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--color-divider)' }}>
-              <span style={{ color: 'var(--muted)' }}>Délai de rétractation</span>
-              <span>30 jours (reste {project.expiresInDays || 28} jours)</span>
-            </div>
-          </div>
-
-          <div style={{ marginTop: 'auto', display: 'flex', gap: '10px' }}>
-            <button
-              onClick={() => {
-                updateProjectStatus(project.id, 'cancelled');
-                showToast('Livraison annulée et démo purgée', 'info');
-              }}
-              style={{
-                width: '100%',
-                padding: '10px',
-                borderRadius: '999px',
-                border: '1px solid var(--color-divider)',
-                background: 'transparent',
-                color: 'var(--danger)',
-                cursor: 'pointer',
-                fontSize: '13px'
-              }}
-            >
-              Annuler la livraison & Purger
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {invoiceModalOpen && (
-        <InvoiceModal project={project} onClose={() => setInvoiceModalOpen(false)} />
+      {delivery ? (
+        <DeliveryView key={delivery.id} delivery={delivery} project={project} />
+      ) : (
+        <Card className="p-10 text-center">
+          <p className="font-display text-[22px]">Aucune livraison</p>
+          <p className="mt-2 text-[15px] text-f-muted">La livraison est créée quand vous assignez un client au projet.</p>
+        </Card>
       )}
+    </DevPage>
+  );
+}
+
+function BackLink() {
+  return (
+    <Link href="/dev/projects" className="mb-6 inline-flex items-center gap-1.5 text-[14px] font-semibold text-f-muted hover:text-f-text">
+      <ArrowLeftIcon size={15} /> Retour aux projets
+    </Link>
+  );
+}
+
+function DeliveryView({ delivery: d, project }: { delivery: Delivery; project: ProjectWithDeliveries }) {
+  const { data: tickets } = useDevTickets();
+  // Un ticket non tranché bloque aussi la modification et l'annulation (règle du serveur).
+  const contested = tickets?.some(t => t.deliveryId === d.id && (t.status === 'awaiting_dev' || t.status === 'open')) ?? false;
+  const { showToast } = useToast();
+  const ui = STATUS_UI[d.status];
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(d.publicUrl);
+      showToast('Lien copié', 'success');
+    } catch {
+      showToast('Copie impossible : sélectionnez le lien à la main.', 'warning');
+    }
+  };
+  const whatsapp = `https://wa.me/${(d.client.phone ?? '').replace(/\D/g, '')}?text=${encodeURIComponent(
+    `Bonjour ${d.client.name}, votre application est prête à être testée : ${d.publicUrl}`,
+  )}`;
+
+  return (
+    <div className="grid items-start gap-5 lg:grid-cols-[1.4fr_1fr]">
+      <div className="space-y-5">
+        <Card className="p-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <StatusBadge status={d.status} />
+            <span className="text-[13px] text-f-muted">Mise à jour {timeAgo(d.updatedAt)}</span>
+          </div>
+          <p className="mt-3 text-[15px] text-f-muted">{ui.hint}</p>
+          {d.failure ? (
+            <p className="mt-3 rounded-xl bg-[var(--danger-100)] px-4 py-3 text-[14px] text-[var(--danger-800)]">{d.failure.message}</p>
+          ) : null}
+        </Card>
+
+        <SourcePanel delivery={d} project={project} />
+
+        {d.pendingPaymentId ? <PaymentReview delivery={d} /> : null}
+        <TicketPanel deliveryId={d.id} />
+
+        {LINK_HIDDEN.includes(d.status) ? null : (
+          <Card className="p-6">
+            <h2 className="heading-sans text-[16px]">Lien de livraison à transmettre au client</h2>
+            <p className="mt-1 text-[13.5px] text-f-muted">{LINK_HINT[d.status] ?? 'Votre client y suit sa livraison.'}</p>
+            <div className="mt-4 flex items-center gap-2 rounded-2xl border border-f-line bg-f-surface p-2 pl-4">
+              <code className="min-w-0 flex-1 truncate text-[13.5px]">{d.publicUrl}</code>
+              <button type="button" onClick={copy} className="cta-ghost shrink-0 rounded-xl px-3 py-2 text-[13.5px]">
+                <CopyIcon size={15} /> Copier
+              </button>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {d.client.phone ? (
+                <a href={whatsapp} target="_blank" rel="noopener noreferrer" className="cta-ghost rounded-xl px-3 py-2 text-[13.5px]">
+                  <WhatsAppIcon size={15} /> Envoyer sur WhatsApp
+                </a>
+              ) : null}
+              <a href={d.publicUrl} target="_blank" rel="noopener noreferrer" className="cta-ghost rounded-xl px-3 py-2 text-[13.5px]">
+                <ExternalIcon size={15} /> Voir la page client
+              </a>
+            </div>
+          </Card>
+        )}
+
+        <EventsCard deliveryId={d.id} />
+      </div>
+
+      <div className="space-y-5">
+        <Card className="p-6">
+          <h2 className="heading-sans text-[16px]">Détails de la livraison</h2>
+          <dl className="mt-4 divide-y divide-[var(--color-divider)] text-[14.5px]">
+            <Row label="Solde convenu" value={<strong className="text-f-ink-accent">{formatXof(d.amountXof)}</strong>} />
+            {LINK_HIDDEN.includes(d.status) ? null : (
+              <>
+                <Row label="Vous recevez" value={<strong className="text-f-success-ink">{formatXof(d.amountXof)} (100 %)</strong>} />
+                <Row
+                  label="Frais Fid’s, payés par le client"
+                  value={
+                    <span>
+                      {formatXof(d.fee.amountXof)}
+                      {d.fee.status ? <span className="block text-[12.5px] text-f-muted">{FEE_STATUS_LABEL[d.fee.status]}</span> : null}
+                    </span>
+                  }
+                />
+              </>
+            )}
+            <Row label="Client" value={d.client.name} />
+            {d.client.email ? <Row label="E-mail" value={d.client.email} /> : null}
+            {d.client.phone ? <Row label="Téléphone" value={formatPhone(d.client.phone)} /> : null}
+            <Row label="Code source inclus" value={d.includeSource ? 'Oui' : 'Non'} />
+            {d.demoUrl ? <Row label="Démo" value={<a className="text-f-ink-accent underline" href={d.demoUrl} target="_blank" rel="noopener noreferrer">Ouvrir</a>} /> : null}
+            {d.clientUrl ? <Row label="Application du client" value={<a className="text-f-ink-accent underline" href={d.clientUrl} target="_blank" rel="noopener noreferrer">Ouvrir</a>} /> : null}
+            {d.expiresAt ? <Row label="Expire le" value={formatDate(d.expiresAt)} /> : null}
+            {d.paidAt ? <Row label="Payée le" value={formatDate(d.paidAt)} /> : null}
+            {d.deliveredAt ? <Row label="Livrée le" value={formatDate(d.deliveredAt)} /> : null}
+            <Row label="Créée le" value={formatDate(d.createdAt)} />
+          </dl>
+        </Card>
+        {isEditable(d) && !contested ? <DeliveryManage delivery={d} /> : null}
+      </div>
     </div>
+  );
+}
+
+/** Lien inutile : la livraison n'est plus accessible au client. */
+const LINK_HIDDEN: DeliveryStatus[] = ['cancelled', 'expired'];
+
+const LINK_HINT: Partial<Record<DeliveryStatus, string>> = {
+  draft: 'La démo sera visible dès que le code sera en ligne.',
+  building: 'La démo sera visible dès que l’installation sera terminée.',
+  demo_ready: 'Votre client y teste la démo puis vous paie directement.',
+  fee_pending: 'Votre client y règle les frais Fid’s pour recevoir l’application.',
+  delivered: 'Votre client y retrouve l’accès à son espace.',
+};
+
+const FEE_STATUS_LABEL = {
+  due: 'En attente du client',
+  declared: 'Déclarés, en vérification par Fid’s',
+  confirmed: 'Réglés',
+} as const;
+
+function Row({ label, value }: { label: string; value: ReactNode }) {
+  return (
+    <div className="flex items-baseline justify-between gap-4 py-2.5">
+      <dt className="text-f-muted">{label}</dt>
+      <dd className="text-right">{value}</dd>
+    </div>
+  );
+}
+
+function EventsCard({ deliveryId }: { deliveryId: string }) {
+  const { data: events, isPending, error } = useDeliveryEvents(deliveryId);
+  const { data: me } = useMe();
+  return (
+    <Card className="p-6">
+      <h2 className="heading-sans text-[16px]">Historique</h2>
+      {isPending ? (
+        <Skeleton className="mt-4 h-24" />
+      ) : error ? (
+        <p className="mt-4 text-[14px] text-[var(--danger-800)]">{errorMessage(error)}</p>
+      ) : events.length === 0 ? (
+        <p className="mt-4 text-[14px] text-f-muted">Aucun événement pour l’instant.</p>
+      ) : (
+        <ol className="mt-4 space-y-3 border-l-2 border-f-line pl-5">
+          {[...events].reverse().map(e => (
+            <li key={e.id} className="relative">
+              <span aria-hidden className="absolute -left-[27px] top-1.5 size-3 rounded-full border-2 border-f-card bg-[var(--color-accent)]" />
+              <p className="text-[14.5px] font-semibold">{EVENT_LABEL[e.type] ?? e.type}</p>
+              <p className="text-[12.5px] text-f-muted">
+                {timeAgo(e.occurredAt)} · {actorLabel(e.actor, me?.id)}
+              </p>
+            </li>
+          ))}
+        </ol>
+      )}
+    </Card>
   );
 }

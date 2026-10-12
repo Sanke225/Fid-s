@@ -48,8 +48,13 @@ export const TRANSITIONS = {
     }),
   },
   "space.ready": { from: ["building"], to: "demo_ready" },
-  // Le dev (ou l'admin après un ticket) confirme avoir reçu l'argent : c'est le déblocage.
-  "payment.confirmed": { from: ["demo_ready"], to: "paid", effects: (_, now) => ({ paidAt: now }) },
+  // « Réinitialiser la démo » (dev ou client) : même version, base remise à zéro par le worker.
+  "demo.reset_requested": { from: ["demo_ready"], to: "building" },
+  // Le dev (ou l'admin après un ticket) confirme avoir reçu l'argent. La démo reste consultable,
+  // mais rien n'est remis tant que le client n'a pas réglé les frais de service Fid’s.
+  "payment.confirmed": { from: ["demo_ready"], to: "fee_pending", effects: (_, now) => ({ paidAt: now }) },
+  // L'administration confirme la réception des frais (5 %) : c'est le déblocage, la passation peut commencer.
+  "fee.confirmed": { from: ["fee_pending"], to: "paid" },
   "handover.started": { from: ["paid", "handover_failed"], to: "handing_over" },
   "handover.succeeded": { from: ["handing_over"], to: "delivered", effects: (_, now) => ({ deliveredAt: now }) },
   "handover.failed": { from: ["handing_over"], to: "handover_failed" },

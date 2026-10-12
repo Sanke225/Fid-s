@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#FFF8F1" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0B0B0F" media="(prefers-color-scheme: dark)">
+  <title>Hors ligne · Fid’s</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <style>
+    /* Page autonome (servie par le service worker sans réseau) : aucune ressource externe. */
+    :root { --bg: #FFF8F1; --text: #1C130C; --muted: #6B5D51; --accent: #B84500; --dev: #1C130C; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #0B0B0F; --text: #F7EFE7; --muted: #B7ADA3; --accent: #FFB27A; --dev: #FFF8F1; }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100svh; display: grid; place-items: center; padding: 24px 16px;
+      background: var(--bg); color: var(--text);
+      font-family: Figtree, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      -webkit-font-smoothing: antialiased; text-align: center;
+    }
+    main { max-width: 420px; }
+    svg { display: block; margin: 0 auto 28px; }
+    h1 { font-family: Caprasimo, Georgia, serif; font-weight: 400; font-size: 34px; line-height: 1.1; margin: 0 0 12px; }
+    p { font-size: 17px; line-height: 1.6; color: var(--muted); margin: 0 0 28px; }
+    button {
+      font: inherit; font-weight: 700; font-size: 16px; color: #fff; background: #B84500;
+      border: 0; border-radius: 999px; padding: 14px 28px; min-height: 48px; cursor: pointer;
+    }
+    button:focus-visible { outline: 3px solid #FF6A00; outline-offset: 3px; }
+    .kente { position: fixed; inset: auto 0 0; height: 10px; background: url(/bande-kente.svg) repeat-x; background-size: auto 100%; }
+  </style>
+</head>
+<body>
+  <main>
+    <svg width="72" height="72" viewBox="0 0 64 64" aria-hidden="true">
+      <path d="M8.5,6 H30.5 V17.62 A9.5 9.5 0 0 0 27.23,35.22 L24.5,58 H8.5 Q6,58 6,55.5 V8.5 Q6,6 8.5,6 Z" fill="var(--dev)"/>
+      <path d="M33.5,6 H42 A16 16 0 0 1 58,22 V42 A16 16 0 0 1 42,58 H39.5 L36.77,35.22 A9.5 9.5 0 0 0 33.5,17.62 Z" fill="#FF6A00"/>
+    </svg>
+    <h1>Pas de connexion</h1>
+    <p>Fid’s a besoin d’Internet pour afficher vos livraisons et paiements. Vérifiez votre réseau, puis réessayez.</p>
+    <button type="button" onclick="location.reload()">Réessayer</button>
+  </main>
+  <div class="kente" aria-hidden="true"></div>
+  <script>window.addEventListener('online', function () { location.reload(); });</script>
+</body>
+</html>

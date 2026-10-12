@@ -16,7 +16,7 @@ export default function DesignSystemPage() {
           Design System Apple Level
         </span>
         <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 400, fontSize: 'clamp(28px, 4vw, 38px)', margin: '4px 0 8px' }}>
-          Système Visuel Recette
+          Système Visuel Fid’s
         </h1>
         <p style={{ fontSize: '16px', color: 'var(--muted)', margin: 0, maxWidth: '640px' }}>
           Minimalisme premium, glassmorphism subtil, dégradé orange signature et typographies d'exception pour une confiance instantanée.
@@ -137,7 +137,7 @@ export default function DesignSystemPage() {
             Sous-titre 24px — Le tiers de confiance des logiciels.
           </div>
           <p style={{ fontFamily: 'var(--font-body)', fontSize: 'clamp(14px, 1.8vw, 16px)', color: 'var(--muted)', margin: 0 }}>
-            Figtree Body 16px — Recette garantit la livraison contre paiement pour les logiciels sur mesure dans toute la zone UEMOA et au-delà.
+            Figtree Body 16px — Fid’s garantit la livraison contre paiement pour les logiciels sur mesure dans toute la zone UEMOA et au-delà.
           </p>
         </div>
       </section>

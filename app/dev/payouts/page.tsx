@@ -1,132 +1,238 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useRecette } from '@/lib/context';
+import { useState, type FormEvent } from 'react';
+import { CheckIcon, PlusIcon } from '@/components/Icons';
+import { Field, FormAlert } from '@/components/auth/Field';
+import { PhoneIcon } from '@/components/auth/AuthIcons';
+import { Card, DevPage, ErrorState, PageHeader, Skeleton } from '@/components/dev/ui';
+import { Modal } from '@/components/dev/Modal';
+import { PROVIDERS, PROVIDER_NAME, ProviderLogo } from '@/components/payments/ProviderLogo';
 import { useToast } from '@/components/Toast';
-import { OrangeMoneyIcon, WaveIcon } from '@/components/Icons';
+import { errorMessage } from '@/lib/api/client';
+import type { PaymentProvider, PayoutMethod } from '@/lib/contracts';
+import { formatPhone, normalizePhone } from '@/lib/phone';
+import { useAddPayoutMethod, usePayoutMethods, useRemovePayoutMethod } from '@/lib/queries/payouts';
 
-export default function DevPayoutsPage() {
-  const { state } = useRecette();
+export default function PayoutsPage() {
+  const { data: methods, isPending, error, refetch } = usePayoutMethods();
+  const [adding, setAdding] = useState(false);
+
+  return (
+    <DevPage>
+      <PageHeader
+        eyebrow="Encaissement"
+        title="Moyens de paiement"
+        actions={
+          <button type="button" onClick={() => setAdding(true)} className="cta-primary rounded-full px-5 py-3 text-[15px]">
+            <PlusIcon size={17} /> Ajouter un moyen de paiement
+          </button>
+        }
+      />
+
+      <Card className="mb-6 flex flex-wrap items-center gap-4 p-5">
+        <div className="flex gap-1.5">
+          {PROVIDERS.map(p => (
+            <ProviderLogo key={p} provider={p} size={34} className="rounded-xl" />
+          ))}
+        </div>
+        <p className="min-w-0 flex-1 text-[14.5px] text-f-muted">
+          Vos clients vous paient <strong className="text-f-text">directement</strong> sur ces numéros : vous recevez 100 % du montant.
+          Fid’s ne touche jamais cet argent.
+        </p>
+      </Card>
+
+      {isPending ? (
+        <div className="grid gap-4 md:grid-cols-2">
+          <Skeleton className="h-24" />
+          <Skeleton className="h-24" />
+        </div>
+      ) : error ? (
+        <ErrorState message={errorMessage(error)} onRetry={() => refetch()} />
+      ) : methods.length === 0 ? (
+        <Card className="border-[var(--warning)] bg-[var(--warning-100)] px-6 py-10 text-center">
+          <p className="font-display text-[22px] text-[var(--warning-800)]">Aucun moyen de paiement</p>
+          <p className="mx-auto mt-2 max-w-md text-[15px] text-[var(--warning-800)]">
+            Tant qu’aucun numéro n’est enregistré, vos clients ne peuvent pas vous payer depuis leur lien de livraison.
+          </p>
+          <button type="button" onClick={() => setAdding(true)} className="cta-primary mt-6 rounded-full px-6 py-3 text-[15px]">
+            <PlusIcon size={17} /> Ajouter mon premier numéro
+          </button>
+        </Card>
+      ) : (
+        <ul className="grid gap-4 md:grid-cols-2">
+          {methods.map(m => (
+            <MethodCard key={m.id} method={m} />
+          ))}
+        </ul>
+      )}
+
+      <AddMethodModal open={adding} onClose={() => setAdding(false)} existing={methods ?? []} />
+    </DevPage>
+  );
+}
+
+function MethodCard({ method }: { method: PayoutMethod }) {
+  const remove = useRemovePayoutMethod();
   const { showToast } = useToast();
+  const [confirming, setConfirming] = useState(false);
 
-  const [wavePhone, setWavePhone] = useState('+225 07 08 45 67 12');
-  const [omPhone, setOmPhone] = useState('+225 07 55 90 12 34');
+  const onRemove = () =>
+    remove.mutate(method.id, {
+      onSuccess: () => showToast('Numéro retiré', 'info'),
+      onError: e => showToast(errorMessage(e), 'warning'),
+    });
 
-  const handleSaveWave = () => {
-    showToast('Compte Wave marchand mis à jour avec succès', 'success');
+  return (
+    <li>
+      <Card className="flex items-center gap-4 p-5">
+        <ProviderLogo provider={method.provider} size={48} className="shrink-0 rounded-xl" />
+        <div className="min-w-0 flex-1">
+          <p className="text-[16px] font-bold">{PROVIDER_NAME[method.provider]}</p>
+          <p className="text-[15px] tabular-nums">{formatPhone(method.phone)}</p>
+          {method.label ? <p className="truncate text-[13px] text-f-muted">{method.label}</p> : null}
+        </div>
+        {confirming ? (
+          <div className="flex shrink-0 flex-col gap-1.5 sm:flex-row">
+            <button
+              type="button"
+              onClick={onRemove}
+              disabled={remove.isPending}
+              className="rounded-xl bg-[var(--danger-100)] px-3 py-2 text-[13.5px] font-semibold text-[var(--danger-800)] hover:brightness-95"
+            >
+              {remove.isPending ? 'Retrait…' : 'Confirmer'}
+            </button>
+            <button type="button" onClick={() => setConfirming(false)} className="rounded-xl px-3 py-2 text-[13.5px] font-semibold text-f-muted hover:bg-f-surface">
+              Annuler
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setConfirming(true)}
+            aria-label={`Retirer ${PROVIDER_NAME[method.provider]} ${formatPhone(method.phone)}`}
+            className="shrink-0 rounded-xl px-3 py-2 text-[13.5px] font-semibold text-f-muted hover:bg-[var(--danger-100)] hover:text-[var(--danger-800)]"
+          >
+            Retirer
+          </button>
+        )}
+      </Card>
+    </li>
+  );
+}
+
+function AddMethodModal({ open, onClose, existing }: { open: boolean; onClose: () => void; existing: PayoutMethod[] }) {
+  const add = useAddPayoutMethod();
+  const { showToast } = useToast();
+  const [provider, setProvider] = useState<PaymentProvider | null>(null);
+  const [phone, setPhone] = useState('');
+  const [label, setLabel] = useState('');
+  const [errors, setErrors] = useState<{ provider?: string; phone?: string }>({});
+  const [formError, setFormError] = useState<string | null>(null);
+
+  const close = () => {
+    setProvider(null);
+    setPhone('');
+    setLabel('');
+    setErrors({});
+    setFormError(null);
+    onClose();
   };
 
-  const handleSaveOm = () => {
-    showToast('Compte Orange Money mis à jour avec succès', 'success');
+  const submit = (e: FormEvent) => {
+    e.preventDefault();
+    const normalized = normalizePhone(phone);
+    const errs: typeof errors = {};
+    if (!provider) errs.provider = 'Choisissez un opérateur.';
+    if (!normalized) errs.phone = 'Numéro attendu au format 07 00 00 00 00 ou +225…';
+    else if (provider && existing.some(m => m.provider === provider && m.phone === normalized)) errs.phone = 'Ce numéro est déjà enregistré pour cet opérateur.';
+    setErrors(errs);
+    setFormError(null);
+    if (errs.provider || errs.phone || !provider || !normalized) return;
+
+    add.mutate(
+      { provider, phone: normalized, label: label.trim() || undefined },
+      {
+        onSuccess: () => {
+          showToast(`${PROVIDER_NAME[provider]} ajouté`, 'success');
+          close();
+        },
+        onError: err => setFormError(errorMessage(err)),
+      },
+    );
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', padding: 'clamp(16px, 2.5vw, 32px)', maxWidth: '1100px', margin: '0 auto' }}>
-      <div>
-        <span style={{ fontSize: '13px', fontWeight: 600, letterSpacing: '.05em', textTransform: 'uppercase', color: 'var(--muted)' }}>
-          Finances & Réception
-        </span>
-        <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 400, fontSize: 'clamp(24px, 3.5vw, 32px)', margin: '4px 0 0' }}>
-          Comptes d'encaissement Mobile Money
-        </h1>
-      </div>
-
-      <div style={{ padding: '20px', borderRadius: '24px', background: 'var(--grad-soft)', border: '1px solid var(--color-accent-200)', display: 'flex', alignItems: 'center', gap: '14px' }}>
-        <span style={{ fontSize: '24px' }}>🔒</span>
-        <div style={{ fontSize: '13px', lineHeight: 1.5 }}>
-          <strong>Principe cardinal de Recette :</strong> L'argent ne transite jamais par nos comptes. Vos identifiants marchands sont stockés chiffrés en base et servent exclusivement à émettre les demandes de paiement à votre nom.
-        </div>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '20px' }}>
-        {/* Compte Wave */}
-        <div style={{ padding: '24px', borderRadius: '28px', background: 'var(--card)', boxShadow: 'var(--shadow-soft)', border: '1px solid var(--color-divider)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <WaveIcon size={28} />
-              <strong style={{ fontSize: '17px' }}>Wave Business</strong>
-            </div>
-            <span style={{ padding: '4px 10px', borderRadius: '999px', background: 'var(--success-100)', color: 'var(--success-800)', fontSize: '11px', fontWeight: 700 }}>
-              Actif
-            </span>
+    <Modal open={open} onClose={close} title="Ajouter un moyen de paiement">
+      <form onSubmit={submit} noValidate className="space-y-5">
+        <FormAlert message={formError} />
+        <fieldset>
+          <legend className="mb-2 text-[13.5px] font-semibold">Opérateur</legend>
+          <div className="grid grid-cols-2 gap-2.5">
+            {PROVIDERS.map(p => {
+              const checked = provider === p;
+              return (
+                <label
+                  key={p}
+                  className={`relative flex cursor-pointer items-center gap-3 rounded-2xl border p-3 transition-[border-color,box-shadow] has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-[var(--color-accent)] ${
+                    checked ? 'border-[var(--color-accent)] shadow-[0_8px_24px_-10px_rgba(255,106,0,.5)]' : 'border-f-line hover:border-[var(--color-accent-300)]'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="provider"
+                    value={p}
+                    checked={checked}
+                    onChange={() => {
+                      setProvider(p);
+                      setErrors(x => ({ ...x, provider: undefined }));
+                    }}
+                    className="sr-only"
+                  />
+                  <ProviderLogo provider={p} size={40} className="shrink-0 rounded-xl" />
+                  <span className="text-[14.5px] font-semibold leading-tight">{PROVIDER_NAME[p]}</span>
+                  {checked ? (
+                    <span className="absolute right-2 top-2 grid size-5 place-items-center rounded-full bg-[#C84A00] text-white">
+                      <CheckIcon size={11} />
+                    </span>
+                  ) : null}
+                </label>
+              );
+            })}
           </div>
+          {errors.provider ? <p className="mt-2 text-[13px] font-medium text-[var(--danger-800)]">{errors.provider}</p> : null}
+        </fieldset>
 
-          <div>
-            <label style={{ fontSize: '13px', fontWeight: 600, display: 'block', marginBottom: '6px' }}>
-              Numéro de téléphone Wave
-            </label>
-            <input
-              type="text"
-              value={wavePhone}
-              onChange={e => setWavePhone(e.target.value)}
-              style={{ width: '100%', padding: '12px 14px', borderRadius: '14px', border: '1px solid var(--color-divider)', background: 'var(--color-surface)', font: 'inherit', boxSizing: 'border-box' }}
-            />
-          </div>
+        <Field
+          label="Numéro de téléphone"
+          icon={<PhoneIcon size={18} />}
+          type="tel"
+          inputMode="tel"
+          autoComplete="tel"
+          placeholder="07 00 00 00 00"
+          value={phone}
+          onChange={e => setPhone(e.target.value)}
+          error={errors.phone}
+          required
+        />
+        <Field
+          label="Libellé"
+          optional
+          icon={<span aria-hidden className="text-[15px] font-bold">#</span>}
+          placeholder="Ex. : compte pro"
+          maxLength={50}
+          value={label}
+          onChange={e => setLabel(e.target.value)}
+        />
 
-          <div>
-            <label style={{ fontSize: '13px', fontWeight: 600, display: 'block', marginBottom: '6px' }}>
-              Clé API Marchand Wave (chiffrée)
-            </label>
-            <input
-              type="password"
-              defaultValue="wv_prod_live_8819203928172"
-              style={{ width: '100%', padding: '12px 14px', borderRadius: '14px', border: '1px solid var(--color-divider)', background: 'var(--color-surface)', font: 'inherit', boxSizing: 'border-box' }}
-            />
-          </div>
-
-          <button
-            onClick={handleSaveWave}
-            className="btn btn-secondary"
-            style={{ marginTop: 'auto', padding: '10px', borderRadius: '999px', fontSize: '13px' }}
-          >
-            Enregistrer les modifications
+        <div className="flex flex-col-reverse gap-2 pt-1 sm:flex-row sm:justify-end">
+          <button type="button" onClick={close} className="cta-ghost justify-center rounded-full px-5 py-3 text-[15px]">
+            Annuler
+          </button>
+          <button type="submit" disabled={add.isPending} className="cta-primary justify-center rounded-full px-6 py-3 text-[15px]">
+            {add.isPending ? 'Enregistrement…' : 'Enregistrer'}
           </button>
         </div>
-
-        {/* Compte Orange Money */}
-        <div style={{ padding: '24px', borderRadius: '28px', background: 'var(--card)', boxShadow: 'var(--shadow-soft)', border: '1px solid var(--color-divider)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <OrangeMoneyIcon size={28} />
-              <strong style={{ fontSize: '17px' }}>Orange Money Pro</strong>
-            </div>
-            <span style={{ padding: '4px 10px', borderRadius: '999px', background: 'var(--success-100)', color: 'var(--success-800)', fontSize: '11px', fontWeight: 700 }}>
-              Actif
-            </span>
-          </div>
-
-          <div>
-            <label style={{ fontSize: '13px', fontWeight: 600, display: 'block', marginBottom: '6px' }}>
-              Numéro Orange Money
-            </label>
-            <input
-              type="text"
-              value={omPhone}
-              onChange={e => setOmPhone(e.target.value)}
-              style={{ width: '100%', padding: '12px 14px', borderRadius: '14px', border: '1px solid var(--color-divider)', background: 'var(--color-surface)', font: 'inherit', boxSizing: 'border-box' }}
-            />
-          </div>
-
-          <div>
-            <label style={{ fontSize: '13px', fontWeight: 600, display: 'block', marginBottom: '6px' }}>
-              ID Marchand Orange Money CI
-            </label>
-            <input
-              type="password"
-              defaultValue="OM_CI_PRO_771829"
-              style={{ width: '100%', padding: '12px 14px', borderRadius: '14px', border: '1px solid var(--color-divider)', background: 'var(--color-surface)', font: 'inherit', boxSizing: 'border-box' }}
-            />
-          </div>
-
-          <button
-            onClick={handleSaveOm}
-            className="btn btn-secondary"
-            style={{ marginTop: 'auto', padding: '10px', borderRadius: '999px', fontSize: '13px' }}
-          >
-            Enregistrer les modifications
-          </button>
-        </div>
-      </div>
-    </div>
+      </form>
+    </Modal>
   );
 }

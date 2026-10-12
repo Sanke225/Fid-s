@@ -2,22 +2,19 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useRecette } from '@/lib/context';
-import {
-  DashIcon,
-  InvoiceIcon,
-  PlusIcon,
-  ProjectsIcon,
-  SearchIcon,
-  ServerIcon,
-  ShieldIcon
-} from './Icons';
+import { latestDelivery } from '@/lib/delivery-ui';
+import { useMe } from '@/lib/queries/me';
+import { useProjects } from '@/lib/queries/projects';
+import { NAV } from '@/components/app/nav';
+import { ExternalIcon, PlusIcon, SearchIcon, UserIcon } from './Icons';
 
 export function CmdPalette() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const router = useRouter();
-  const { state } = useRecette();
+  // Chargés seulement palette ouverte, et seulement pour un compte dev.
+  const { data: me } = useMe({ enabled: open });
+  const { data: projects } = useProjects({ enabled: open && me?.role === 'dev' });
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -48,24 +45,27 @@ export function CmdPalette() {
     router.push(path);
   };
 
-  const navItems = [
-    { label: 'Tableau de bord Développeur', path: '/dev/dashboard', icon: <DashIcon size={18} /> },
-    { label: 'Mes projets', path: '/dev/projects', icon: <ProjectsIcon size={18} /> },
-    { label: 'Nouveau projet à livrer', path: '/dev/new', icon: <PlusIcon size={18} /> },
-    { label: 'Moyens de réception (Wave & OM)', path: '/dev/payouts', icon: <DashIcon size={18} /> },
-    { label: 'Factures émises', path: '/dev/invoices', icon: <InvoiceIcon size={18} /> },
-    { label: 'Supervision Admin (Systalink)', path: '/admin/overview', icon: <ServerIcon size={18} /> },
-    { label: 'Espace Client (Mariam Traoré)', path: '/client/dashboard', icon: <DashIcon size={18} /> },
-    { label: 'Design System Apple-Level', path: '/design-system', icon: <ShieldIcon size={18} /> }
-  ];
+  // Commandes du rôle connecté seulement (même menu que la colonne) ; déconnecté : accueil et connexion.
+  const nav = me?.role ? NAV[me.role] : null;
+  const navItems = nav
+    ? [
+        ...(nav.cta ? [{ label: nav.cta.label, path: nav.cta.href, icon: nav.cta.icon }] : []),
+        ...nav.groups.flatMap(g => g.items).map(i => ({ label: i.label, path: i.href, icon: i.icon })),
+        { label: 'Site vitrine', path: '/', icon: <ExternalIcon size={18} /> },
+      ]
+    : [
+        { label: 'Se connecter', path: '/connexion', icon: <UserIcon size={18} /> },
+        { label: 'Créer un compte', path: '/inscription', icon: <PlusIcon size={18} /> },
+        { label: 'Accueil', path: '/', icon: <ExternalIcon size={18} /> },
+      ];
 
   const filteredNav = navItems.filter(item =>
     item.label.toLowerCase().includes(query.toLowerCase())
   );
 
-  const filteredProjects = state.projects.filter(p =>
+  const filteredProjects = (projects ?? []).filter(p =>
     p.name.toLowerCase().includes(query.toLowerCase()) ||
-    p.client.name.toLowerCase().includes(query.toLowerCase())
+    (latestDelivery(p)?.client.name.toLowerCase().includes(query.toLowerCase()) ?? false)
   );
 
   return (
@@ -205,10 +205,17 @@ export function CmdPalette() {
                 Projets récents
               </span>
               {filteredProjects.map(p => (
-                <div
+                <button
+                  type="button"
                   key={p.id}
                   onClick={() => navigateTo(`/dev/project/${p.id}`)}
                   style={{
+                    width: '100%',
+                    border: 0,
+                    background: 'transparent',
+                    color: 'inherit',
+                    font: 'inherit',
+                    textAlign: 'left',
                     padding: '10px 14px',
                     borderRadius: '14px',
                     display: 'flex',
@@ -229,9 +236,9 @@ export function CmdPalette() {
                     <strong>{p.name}</strong>
                   </span>
                   <span style={{ fontSize: '12px', color: 'var(--muted)' }}>
-                    {(p.amountXof || 0).toLocaleString('fr-FR')} FCFA
+                    {latestDelivery(p) ? `${latestDelivery(p)!.amountXof.toLocaleString('fr-FR')} FCFA` : ''}
                   </span>
-                </div>
+                </button>
               ))}
             </>
           )}

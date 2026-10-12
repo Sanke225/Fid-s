@@ -6,3 +6,6 @@ export * from "./users";
 export * from "./deliveries";
 export * from "./payments";
 export * from "./runtime";
+export * from "./client";
+export * from "./notifications";
+export * from "./admin";

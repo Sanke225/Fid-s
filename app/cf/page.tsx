@@ -69,8 +69,8 @@ export default function CfPage() {
               <ol>
                 <li>Le client teste l’application sur la démo, accessible par son lien de livraison ou son espace client.</li>
                 <li>S’il est satisfait, il paie le montant convenu au numéro Mobile Money du développeur de son choix, puis <strong>déclare son paiement</strong> avec la référence reçue par SMS.</li>
-                <li>Le développeur vérifie la réception et clique sur <strong>« Dépôt confirmé »</strong>. La démo reste consultable, mais rien n’est encore remis.</li>
-                <li>Le client règle les <strong>frais de service de 5 %</strong> sur l’un des numéros de Fid’s indiqués sur sa page, puis déclare la référence.</li>
+                <li>Le développeur vérifie la réception et clique sur <strong>« Dépôt confirmé »</strong>, dans un délai de 48 heures. La démo reste consultable, mais rien n’est encore remis.</li>
+                <li>Le client règle les <strong>frais de service de 5 %</strong> sur l’un des numéros de Fid’s indiqués sur sa page, puis déclare la référence. Fid’s la vérifie sous 48 heures.</li>
                 <li>Dès que Fid’s a confirmé la réception des frais, la livraison est débloquée : l’application passe au nom du client, avec ses accès et, si prévu, le code source.</li>
               </ol>
               <p>
@@ -84,7 +84,7 @@ export default function CfPage() {
           title: 'Essai et expiration de la démo',
           body: (
             <>
-              <p>La démo reste accessible jusqu’à la date d’expiration indiquée sur la page de livraison. Le client n’a rien à payer tant qu’il n’a pas décidé de garder l’application.</p>
+              <p>La démo reste accessible jusqu’à la date d’expiration indiquée sur la page de livraison, soit 30 jours après le dernier dépôt du développeur. Le client n’a rien à payer tant qu’il n’a pas décidé de garder l’application.</p>
               <p>Sans paiement confirmé à l’expiration, la démo et le code déposé sont supprimés : le développeur conserve son travail et le client ne reçoit rien.</p>
             </>
           ),

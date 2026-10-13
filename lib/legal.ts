@@ -19,9 +19,13 @@ export const COMPANY = {
   taxId: '(en mode dev)',
   address: '(en mode dev), Abidjan, Côte d’Ivoire',
   phone: '(en mode dev)',
-  email: 'contact@fids.ci (en mode dev)',
-  privacyEmail: 'donnees@fids.ci (en mode dev)',
+  email: 'fids.dev2@gmail.com',
+  privacyEmail: 'fids.dev2@gmail.com',
   director: '(en mode dev)',
+  /** Numéro WhatsApp du support (laisser « (en mode dev) » tant qu'il n'est pas ouvert). */
+  whatsapp: '(en mode dev)',
+  /** Délai de réponse annoncé sur la page Contact. */
+  responseTime: '48 heures ouvrées',
   host: {
     name: 'Systalink (en mode dev)',
     address: '(en mode dev)',

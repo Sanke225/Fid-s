@@ -44,7 +44,7 @@ export default function CguPage() {
               <li><strong>Client :</strong> personne physique ou morale qui a commandé le logiciel, le teste et le paie.</li>
               <li><strong>Démo :</strong> environnement temporaire et cloisonné qui exécute l’application pour l’essayer sans accéder au code source.</li>
               <li><strong>Passation :</strong> remise de l’application au client (accès, base de données, code source si prévu) après confirmation des paiements.</li>
-              <li><strong>Administration :</strong> l’équipe Fid’s, qui confirme les frais de service et tranche les litiges sur preuves.</li>
+              <li><strong>Administration :</strong> l’équipe Fid’s, qui confirme les frais de service et tranche les litiges sur preuves. Le rôle d’administrateur n’est jamais attribué depuis l’interface : il est réservé à l’équipe Fid’s.</li>
             </ul>
           ),
         },
@@ -88,8 +88,19 @@ export default function CguPage() {
               <p>
                 Il est interdit de déposer du code contenant des portes dérobées, des logiciels malveillants, des composants de minage, ou tout élément qui porte atteinte au client ou à l’infrastructure de Fid’s. Il est également interdit de déclarer un paiement fictif. La liste complète figure dans les <Link href="/regles">Règles d’utilisation</Link>.
               </p>
+            </>
+          ),
+        },
+        {
+          id: 'suspension',
+          title: 'Suspension, fermeture et suppression du compte',
+          body: (
+            <>
               <p>
-                En cas de manquement, Fid’s peut suspendre la livraison ou le compte concerné, après en avoir informé l’utilisateur sauf urgence, et signaler les faits aux autorités compétentes.
+                En cas de manquement aux présentes conditions ou aux <Link href="/regles">Règles d’utilisation</Link> (code malveillant, fraude aux paiements, usurpation d’identité…), Fid’s peut arrêter une démo, suspendre une livraison ou suspendre le compte concerné. L’utilisateur est informé de la mesure et de son motif, sauf urgence ou demande des autorités, et peut la contester auprès du <Link href="/contact">support</Link>. En cas de manquement grave ou répété, le compte est fermé et les faits peuvent être signalés aux autorités compétentes.
+              </p>
+              <p>
+                Chaque utilisateur peut supprimer son compte depuis son profil, dès qu’aucune livraison n’est en cours de paiement ou de remise et qu’aucun litige n’est ouvert. Ses données personnelles sont alors effacées ; les paiements, frais et factures sont conservés sans elles, au titre des obligations comptables.
               </p>
             </>
           ),
@@ -114,7 +125,12 @@ export default function CguPage() {
               <p>
                 Fid’s s’engage à mettre en œuvre les moyens raisonnables pour assurer la disponibilité et la sécurité de la plateforme, sans garantir un fonctionnement ininterrompu. Fid’s n’est pas partie au contrat entre le développeur et le client : elle ne répond ni de la qualité de l’application livrée, ni de son adéquation aux besoins du client.
               </p>
-              <p>Fid’s ne répond pas des incidents propres aux opérateurs Mobile Money (retards, erreurs de numéro, frais de l’opérateur).</p>
+              <p>
+                <strong>Fid’s n’est pas un établissement de paiement et ne détient jamais les fonds versés au développeur.</strong> Elle ne répond donc ni de l’exécution de ces paiements, ni des incidents propres aux opérateurs Mobile Money (retards, erreurs de numéro, frais de l’opérateur).
+              </p>
+              <p>
+                Fid’s ne répond pas non plus d’un dommage causé par l’application d’un développeur, ni d’une perte de données due à une mauvaise utilisation de l’application après sa remise au client.
+              </p>
             </>
           ),
         },

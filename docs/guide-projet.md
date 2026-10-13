@@ -264,8 +264,11 @@ Mots de passe hachés par Better Auth, code et variables d'environnement chiffr�
 
 ## 13. Pages légales et documentation (Roxane)
 
-- **Réservées à Roxane** (rédaction en cours) : `/confidentialite`, `/cookies`, `/mentions-legales`, `/litiges`, `/regles`, `/faq`, `/contact`. Elles affichent pour l'instant « Réservé pour Roxane » (`components/legal/Reserved.tsx`). Roxane gère aussi la documentation.
-- **Déjà rédigées** : `/cgu` et `/cf`.
+- **Responsable** : Roxane, qui tient aussi ce guide à jour.
+- **Les neuf pages sont rédigées** (12 octobre) : `/cgu`, `/cf`, `/confidentialite`, `/cookies`, `/mentions-legales`, `/litiges`, `/regles`, `/faq`, `/contact`. Les faits qu'elles citent viennent du code : délais de 48 h (`lib/payments/tickets.ts`, `lib/payments/fee.ts`), frais de 5 % (`lib/payments/fee-rules.ts`), expiration à 30 jours (`lib/core/transitions.ts`), conditions de suppression du compte (`lib/core/account.ts`), cookies et stockage local (§13, liste ci-dessous). **Si l'un de ces fichiers change, mettre à jour la page légale correspondante.**
+- `components/legal/Reserved.tsx` n'est plus utilisé par aucune page : il peut être supprimé.
+- **À valider par l'équipe** (choix rédactionnels, pas encore des faits du code) : durées de conservation (paiements et factures 10 ans, litiges 5 ans, sauvegardes 7 jours), délai de réponse du support (`COMPANY.responseTime`, 48 heures ouvrées), délai de 15 jours pour demander le réexamen d'une décision de litige.
+- **Coordonnées** : l'e-mail de contact et des données personnelles est `fids.dev2@gmail.com` (`COMPANY.email`, `COMPANY.privacyEmail`). Le numéro WhatsApp du support se renseigne dans `COMPANY.whatsapp`.
 - Toutes utilisent `components/legal/LegalPage.tsx` (titre, date, sommaire, articles, pied de page commun). Une page = une liste de `sections` `{ id, title, body }` ; le texte reçoit la classe `legal-prose` automatiquement. Exemple complet : `app/cgu/page.tsx`. Pour la FAQ ou le contact, passer `numbered={false}` (pas de « Article 1 · »).
 - Les informations de l'entreprise (raison sociale, RCCM, adresse, e-mails, hébergeur…) sont centralisées dans `COMPANY` (`lib/legal.ts`) et valent « (en mode dev) » tant qu'elles ne sont pas connues. Les afficher avec `{COMPANY.name}`, etc., plutôt que de les recopier ; `InfoRow` (dans `LegalPage.tsx`) affiche une ligne « libellé : valeur ».
 - La date affichée vient de `LEGAL_UPDATED_AT` ; changer `TERMS_VERSION` si le fond des CGU ou de la confidentialité change (§8.8).
@@ -276,7 +279,9 @@ Mots de passe hachés par Better Auth, code et variables d'environnement chiffr�
   - **Litiges** : procédure du §8.4 (48 h, ticket, décision motivée de l'admin).
   - **Règles d'utilisation** : code malveillant interdit, fraude aux paiements, comptes, sanctions, signalement.
   - **FAQ** et **Contact** : questions courantes, moyens de contact et délai de réponse.
-- Faire relire les textes par un juriste avant la mise en production.
+- **Avant la mise en production** : remplacer toutes les valeurs « (en mode dev) » de `COMPANY` (raison sociale, forme, RCCM, compte contribuable, adresse, téléphone, WhatsApp, directeur de la publication, hébergeur), puis faire relire les textes par un juriste.
+- **Ajouter un cookie ou un stockage local** (statistiques, nouvelle préférence…) : l'ajouter à la liste `TRACES` de `app/cookies/page.tsx`. S'il n'est pas strictement nécessaire au service, il faut aussi un bandeau de consentement avant de le poser.
+- **Ajouter une donnée personnelle** (nouvelle colonne sur `User`, `Payment`…) : la décrire dans `app/confidentialite/page.tsx` (données, finalité, durée) et l'inclure dans l'export `GET /api/v1/me/export`.
 
 ## 14. Vérifier son travail
 
@@ -291,9 +296,9 @@ Puis tester le parcours dans le navigateur, en clair et en sombre, sur ordinateu
 
 ## 15. Ce qui reste / ce qui est obsolète
 
-- **Obsolète** : `docs/page-client.md` décrit l'ancien faux backend de la page client (supprimé). `lib/context.tsx`, `lib/store.ts`, `lib/types.ts` et `components/auth/useSyncMockUser.ts` sont des restes de l'ancienne maquette, encore importés par `app/layout.tsx` et `components/InvoiceModal.tsx` : à supprimer.
+- **Obsolète** : `lib/context.tsx`, `lib/store.ts`, `lib/types.ts` et `components/auth/useSyncMockUser.ts` sont des restes de l'ancienne maquette, encore importés par `app/layout.tsx` et `components/InvoiceModal.tsx` : à supprimer.
 - **Planning du concours** (`docs/plan-cadev.md`) : paiement Wave (4b), mise à jour automatique (5), nom de domaine (6), passation (7), mise en ligne (8).
-- **Autres** : e-mails transactionnels (paiement déclaré, frais confirmés…), connexion Apple (en attente de l'abonnement Apple Developer, interrupteur `APPLE_ENABLED`), rédaction des sept pages légales réservées à Roxane (§13).
+- **Autres** : e-mails transactionnels (paiement déclaré, frais confirmés…), connexion Apple (en attente de l'abonnement Apple Developer, interrupteur `APPLE_ENABLED`), informations légales « (en mode dev) » à compléter et relecture juridique des pages légales (§13).
 
 ## 16. Consignes pour un agent IA
 
